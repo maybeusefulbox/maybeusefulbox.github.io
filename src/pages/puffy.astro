@@ -1,0 +1,558 @@
+---
+// ぷっくりアイコンメーカー
+// アップロードした画像を「ボンボンドロップシール」風のぷっくりアイコンに加工する。
+// 処理はすべてブラウザ内（下の <script>）で行い、画像はどこにも送信しない。
+import GlossyBadge from '../components/GlossyBadge.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <meta name="viewport" content="width=device-width" />
+    <title>ぷっくりアイコンメーカー | tool_site</title>
+    <style>
+      :root {
+        --bg: #fdf3f8;
+        --panel: #ffffff;
+        --text: #333;
+        --muted: #777;
+        --accent: #f06aa8;
+        --accent-dark: #c94785;
+        --line: #f1d3e2;
+      }
+      * { box-sizing: border-box; }
+      /* display を指定した要素でも、hidden 属性を付けたら確実に消えるようにする */
+      [hidden] { display: none !important; }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        font-family: 'Hiragino Maru Gothic ProN', 'M PLUS Rounded 1c', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header { display: flex; align-items: center; gap: 12px; }
+      h1 { font-size: 1.5rem; margin: 0; }
+      .lead { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+      .layout {
+        display: grid;
+        gap: 24px;
+        max-width: 960px;
+        margin-top: 16px;
+      }
+      @media (min-width: 760px) {
+        .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+      }
+
+      /* プレビュー：透明部分がわかるように市松模様を敷く */
+      .drop {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        aspect-ratio: 1;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 2px dashed var(--line);
+        background:
+          repeating-conic-gradient(#f4f4f4 0 25%, #fff 0 50%) 0 0 / 24px 24px;
+        overflow: hidden;
+      }
+      .drop.dragover { border-color: var(--accent); }
+      #sticker {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none; /* スマホでドラッグ中にページがスクロールしないように */
+        cursor: grab;
+      }
+      #sticker:active { cursor: grabbing; }
+      #placeholder {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--muted);
+        pointer-events: none;
+        line-height: 1.8;
+      }
+      .hint { text-align: center; font-size: 0.8rem; color: var(--muted); }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        display: grid;
+        gap: 16px;
+      }
+      .row { display: grid; gap: 6px; }
+      .row > span, legend { font-size: 0.85rem; font-weight: bold; }
+      fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+      .inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      input[type='range'] { width: 100%; accent-color: var(--accent); }
+      input[type='color'] { width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 6px; }
+      .note { font-size: 0.75rem; color: var(--muted); margin: 0; }
+
+      /* ピル型のグロッシーボタン（CSS版の4レイヤー：色面・ハイライト・内側の影） */
+      .pill {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border: 1px solid var(--accent-dark);
+        border-radius: 999px;
+        background: radial-gradient(ellipse at 50% 20%, #ff9fcb, var(--accent) 60%, var(--accent-dark));
+        box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.15);
+        color: #fff;
+        font: inherit;
+        font-weight: bold;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .pill::before {
+        content: '';
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        top: 2px;
+        height: 48%;
+        border-radius: 999px;
+        background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+        pointer-events: none;
+      }
+      .pill:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+      .pill.small { padding: 6px 12px; font-size: 0.85rem; }
+      .pill.ghost { background: #fff; color: var(--accent-dark); text-shadow: none; border-color: var(--line); box-shadow: none; }
+      .pill.ghost::before { display: none; }
+      .pill[aria-pressed='true'] { outline: 3px solid #ffd2e7; }
+
+      details summary { cursor: pointer; font-size: 0.85rem; color: var(--accent-dark); }
+      details[open] { display: grid; gap: 10px; }
+      .export { display: grid; gap: 8px; }
+      .terms { font-size: 0.75rem; color: var(--muted); line-height: 1.6; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <GlossyBadge color="#f06aa8" motif="heart" size={48} title="" />
+      <h1>ぷっくりアイコンメーカー</h1>
+    </header>
+    <p class="lead">
+      画像を選ぶと、ボンボンドロップシールのような、ぷっくりツヤツヤのアイコンに加工できます。<br />
+      画像はお使いのブラウザの中だけで処理され、どこにも送信されません。
+    </p>
+
+    <main class="layout">
+      <section>
+        <div class="drop" id="drop">
+          <svg id="sticker" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"></svg>
+          <p id="placeholder">ここに画像をドロップ<br />または「画像を選ぶ」から選択</p>
+        </div>
+        <p class="hint">プレビューをドラッグすると画像の位置を動かせます</p>
+      </section>
+
+      <section class="panel">
+        <label class="pill">
+          画像を選ぶ
+          <input type="file" id="file" accept="image/*" hidden />
+        </label>
+
+        <fieldset>
+          <legend>形</legend>
+          <div class="inline">
+            <label><input type="radio" name="shape" value="circle" checked /> 丸</label>
+            <label><input type="radio" name="shape" value="contour" /> 輪郭に沿う</label>
+          </div>
+          <p class="note">「輪郭に沿う」は背景が透明なPNG向けです。キャラクターの形に沿ってフチが付きます。</p>
+        </fieldset>
+
+        <label class="row">
+          <span>画像の大きさ</span>
+          <input type="range" id="scale" min="0.3" max="3" step="0.01" value="1" />
+        </label>
+
+        <div class="row">
+          <span>フチ</span>
+          <div class="inline">
+            <input type="color" id="borderColor" value="#ffffff" aria-label="フチの色" />
+            <input type="range" id="border" min="0" max="24" step="1" value="12" aria-label="フチの太さ" style="flex:1" />
+          </div>
+        </div>
+
+        <label class="row" id="bgRow">
+          <span>背景色（丸のとき、透明部分の色）</span>
+          <input type="color" id="bg" value="#ffffff" />
+        </label>
+
+        <label class="row">
+          <span>ぷっくり度</span>
+          <input type="range" id="puff" min="0" max="100" step="1" value="60" />
+        </label>
+
+        <div class="row">
+          <span>ツヤ</span>
+          <div class="inline" id="presets">
+            <button type="button" class="pill small ghost" data-preset="soft">ふんわり</button>
+            <button type="button" class="pill small ghost" data-preset="glossy">つやつや</button>
+            <button type="button" class="pill small ghost" data-preset="jelly">うるうる</button>
+            <button type="button" class="pill small ghost" data-preset="none">なし</button>
+          </div>
+          <details>
+            <summary>詳細設定を開く</summary>
+            <label class="row"><span>横位置</span><input type="range" data-hl="cx" min="60" max="340" step="1" /></label>
+            <label class="row"><span>縦位置</span><input type="range" data-hl="cy" min="40" max="300" step="1" /></label>
+            <label class="row"><span>横幅</span><input type="range" data-hl="rx" min="20" max="180" step="1" /></label>
+            <label class="row"><span>高さ</span><input type="range" data-hl="ry" min="10" max="140" step="1" /></label>
+            <label class="row"><span>濃さ</span><input type="range" data-hl="opacity" min="0" max="1" step="0.01" /></label>
+            <label class="row"><span>ぼかし</span><input type="range" data-hl="blur" min="0" max="12" step="0.5" /></label>
+            <label class="inline"><input type="checkbox" id="sparkle" /> 小さな光を足す</label>
+          </details>
+        </div>
+
+        <div class="export">
+          <button type="button" class="pill" id="savePng" disabled>PNGで保存（400×400）</button>
+          <button type="button" class="pill ghost" id="saveSvg" disabled>SVGで保存</button>
+          <p class="terms">
+            作ったアイコンはSNSのアイコンなどにご自由にお使いください。
+            使用する画像は、ご自身で権利を持っているもの、または利用が許可されているものに限ります。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <p><a href={base}>トップへ戻る</a></p>
+
+    <script>
+      // .astro の <script> は TypeScript として書け、ビルド時にまとめられてページに読み込まれる。
+
+      const SIZE = 400; // 書き出しサイズ（px）。SVG の座標系もこれに合わせている
+      const C = SIZE / 2; // 中心
+      const R = 150; // 丸のときの半径。フチ＋影の分、端に余白を残す
+
+      type Highlight = { cx: number; cy: number; rx: number; ry: number; opacity: number; blur: number };
+
+      const PRESETS: Record<string, Highlight & { sparkle: boolean }> = {
+        soft: { cx: 200, cy: 118, rx: 112, ry: 62, opacity: 0.75, blur: 5, sparkle: false },
+        glossy: { cx: 200, cy: 108, rx: 122, ry: 56, opacity: 0.95, blur: 0, sparkle: true },
+        jelly: { cx: 172, cy: 122, rx: 86, ry: 54, opacity: 0.9, blur: 2, sparkle: true },
+        none: { cx: 200, cy: 118, rx: 112, ry: 62, opacity: 0, blur: 0, sparkle: false },
+      };
+
+      const state = {
+        src: '', // 画像の data URL（SVG を画像として描くとき、外部URLやblob URLは読み込まれないため）
+        imgW: 0,
+        imgH: 0,
+        shape: 'circle' as 'circle' | 'contour',
+        scale: 1,
+        x: 0, // 画像中心の、キャンバス中心からのずれ
+        y: 0,
+        border: 12,
+        borderColor: '#ffffff',
+        bg: '#ffffff',
+        puff: 60,
+        hl: { ...PRESETS.soft } as Highlight,
+        sparkle: false,
+        preset: 'soft',
+      };
+
+      const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+      const svg = document.getElementById('sticker') as unknown as SVGSVGElement;
+      const drop = $<HTMLDivElement>('drop');
+      const placeholder = $<HTMLParagraphElement>('placeholder');
+
+      // ---------- 描画 ----------
+
+      /** 画像を「大きさ=1」のときにちょうどよく収める倍率 */
+      function fitRatio() {
+        return state.shape === 'circle'
+          ? (R * 2) / Math.min(state.imgW, state.imgH) // 丸を隙間なく覆う
+          : 300 / Math.max(state.imgW, state.imgH); // 全体が収まる
+      }
+
+      /**
+       * 「シールの形」を作るフィルタ部品。
+       * SourceAlpha（画像の不透明な部分）を feMorphology で太らせてフチの分だけ広げ、
+       * 少しぼかしてから濃淡をくっきりさせることで、角を丸めたなめらかな輪郭にする。
+       * 最後に result="shape" という名前を付け、後続の部品から参照できるようにしている。
+       */
+      function shapePrimitives() {
+        const grow =
+          state.border > 0
+            ? `<feMorphology in="SourceAlpha" operator="dilate" radius="${state.border}"/>`
+            : `<feOffset in="SourceAlpha"/>`; // radius=0 だとブラウザによって結果が変わるので避ける
+        return `${grow}
+          <feGaussianBlur stdDeviation="1.5"/>
+          <feComponentTransfer result="shape"><feFuncA type="linear" slope="3" intercept="-1"/></feComponentTransfer>`;
+      }
+
+      function render() {
+        if (!state.src) {
+          svg.innerHTML = '';
+          placeholder.hidden = false;
+          return;
+        }
+        placeholder.hidden = true;
+
+        const k = fitRatio() * state.scale;
+        const w = state.imgW * k;
+        const h = state.imgH * k;
+        const ix = C + state.x - w / 2;
+        const iy = C + state.y - h / 2;
+
+        const image = `<image href="${state.src}" x="${ix}" y="${iy}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;
+        // 丸：clipPath で円に切り抜く。透明部分が見えないよう、下に背景色の円を敷く
+        const content =
+          state.shape === 'circle'
+            ? `<g clip-path="url(#clip)"><circle cx="${C}" cy="${C}" r="${R}" fill="${state.bg}"/>${image}</g>`
+            : image;
+
+        const p = state.puff / 100;
+        const innerBlur = 4 + p * 14;
+        const innerOpacity = p * 0.55;
+        const hl = state.hl;
+
+        svg.innerHTML = `
+          <defs>
+            <clipPath id="clip"><circle cx="${C}" cy="${C}" r="${R}"/></clipPath>
+
+            <!-- 中身はここに1回だけ定義し、<use> で「本体」と「マスク」の2か所から使い回す -->
+            <g id="content">${content}</g>
+
+            <filter id="puffy" filterUnits="userSpaceOnUse" x="0" y="0" width="${SIZE}" height="${SIZE}" color-interpolation-filters="sRGB">
+              ${shapePrimitives()}
+              <!-- フチ：シールの形を、フチの色で塗りつぶす -->
+              <feFlood flood-color="${state.borderColor}"/>
+              <feComposite in2="shape" operator="in" result="outline"/>
+              <!-- 落ち影：形をぼかして下にずらす -->
+              <feGaussianBlur in="shape" stdDeviation="5"/>
+              <feOffset dy="6" result="dropBlur"/>
+              <feFlood flood-color="#000" flood-opacity="0.25"/>
+              <feComposite in2="dropBlur" operator="in" result="drop"/>
+              <!-- 内側の影：形の「外側」をぼかして内側へにじませ、形の中だけ残す。ぷっくりの正体 -->
+              <feComponentTransfer in="shape" result="outside"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+              <feGaussianBlur in="outside" stdDeviation="${innerBlur}"/>
+              <feOffset dy="${-innerBlur * 0.5}" result="outsideBlur"/>
+              <feFlood flood-color="#000" flood-opacity="${innerOpacity}"/>
+              <feComposite in2="outsideBlur" operator="in"/>
+              <feComposite in2="shape" operator="in" result="inner"/>
+              <!-- 下から順に重ねる：落ち影 → フチ → 元の画像 → 内側の影 -->
+              <feMerge>
+                <feMergeNode in="drop"/>
+                <feMergeNode in="outline"/>
+                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="inner"/>
+              </feMerge>
+            </filter>
+
+            <!-- シールの形を白く塗るだけのフィルタ。ハイライトをシールの内側だけに表示するマスクに使う -->
+            <filter id="shapeWhite" filterUnits="userSpaceOnUse" x="0" y="0" width="${SIZE}" height="${SIZE}">
+              ${shapePrimitives()}
+              <feFlood flood-color="#fff"/>
+              <feComposite in2="shape" operator="in"/>
+            </filter>
+            <mask id="inside" maskUnits="userSpaceOnUse" x="0" y="0" width="${SIZE}" height="${SIZE}">
+              <use href="#content" filter="url(#shapeWhite)"/>
+            </mask>
+
+            <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff" stop-opacity="${hl.opacity}"/>
+              <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+            <!-- 下ほどわずかに暗くして、丸みのある面に見せる -->
+            <linearGradient id="tone" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="45%" stop-color="#000" stop-opacity="0"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="${p * 0.18}"/>
+            </linearGradient>
+            <filter id="soften" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="${hl.blur}"/>
+            </filter>
+          </defs>
+
+          <use href="#content" filter="url(#puffy)"/>
+
+          <g mask="url(#inside)">
+            <rect width="${SIZE}" height="${SIZE}" fill="url(#tone)"/>
+            <ellipse cx="${hl.cx}" cy="${hl.cy}" rx="${hl.rx}" ry="${hl.ry}" fill="url(#shine)"${hl.blur > 0 ? ' filter="url(#soften)"' : ''}/>
+            ${
+              state.sparkle
+                ? `<circle cx="${C + R * 0.52}" cy="${C + R * 0.58}" r="9" fill="#fff" opacity="0.85" filter="url(#soften)"/>
+                   <circle cx="${C + R * 0.66}" cy="${C + R * 0.42}" r="4" fill="#fff" opacity="0.9"/>`
+                : ''
+            }
+          </g>`;
+      }
+
+      // ---------- 画像の読み込み ----------
+
+      async function loadFile(file: File) {
+        if (!file.type.startsWith('image/')) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+        URL.revokeObjectURL(url);
+
+        // 大きすぎる写真はそのままだと重いので、長い辺 1000px までに縮めてから使う
+        const max = 1000;
+        const ratio = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * ratio);
+        canvas.height = Math.round(img.naturalHeight * ratio);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        state.src = canvas.toDataURL('image/png'); // PNG なら透明部分も保たれる
+        state.imgW = canvas.width;
+        state.imgH = canvas.height;
+        state.x = 0;
+        state.y = 0;
+        state.scale = 1;
+        $<HTMLInputElement>('scale').value = '1';
+        $<HTMLButtonElement>('savePng').disabled = false;
+        $<HTMLButtonElement>('saveSvg').disabled = false;
+        render();
+      }
+
+      $<HTMLInputElement>('file').addEventListener('change', (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) loadFile(file);
+      });
+
+      drop.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        drop.classList.add('dragover');
+      });
+      drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+        const file = e.dataTransfer?.files[0];
+        if (file) loadFile(file);
+      });
+
+      // ---------- ドラッグで位置調整 ----------
+
+      let dragging: { px: number; py: number; x: number; y: number } | null = null;
+      svg.addEventListener('pointerdown', (e) => {
+        if (!state.src) return;
+        svg.setPointerCapture(e.pointerId);
+        dragging = { px: e.clientX, py: e.clientY, x: state.x, y: state.y };
+      });
+      svg.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        // 画面上の移動量(px)を、SVG の座標(0〜400)に換算する
+        const unit = SIZE / svg.getBoundingClientRect().width;
+        state.x = dragging.x + (e.clientX - dragging.px) * unit;
+        state.y = dragging.y + (e.clientY - dragging.py) * unit;
+        render();
+      });
+      const endDrag = () => (dragging = null);
+      svg.addEventListener('pointerup', endDrag);
+      svg.addEventListener('pointercancel', endDrag);
+
+      // ---------- 各コントロール ----------
+
+      document.querySelectorAll<HTMLInputElement>('input[name="shape"]').forEach((el) =>
+        el.addEventListener('change', () => {
+          state.shape = el.value as typeof state.shape;
+          state.x = 0;
+          state.y = 0;
+          $<HTMLLabelElement>('bgRow').hidden = state.shape !== 'circle';
+          render();
+        }),
+      );
+
+      const bindRange = (id: string, apply: (v: number) => void) =>
+        $<HTMLInputElement>(id).addEventListener('input', (e) => {
+          apply(Number((e.target as HTMLInputElement).value));
+          render();
+        });
+      bindRange('scale', (v) => (state.scale = v));
+      bindRange('border', (v) => (state.border = v));
+      bindRange('puff', (v) => (state.puff = v));
+
+      $<HTMLInputElement>('borderColor').addEventListener('input', (e) => {
+        state.borderColor = (e.target as HTMLInputElement).value;
+        render();
+      });
+      $<HTMLInputElement>('bg').addEventListener('input', (e) => {
+        state.bg = (e.target as HTMLInputElement).value;
+        render();
+      });
+
+      // ツヤ：プリセット（おまかせ）と詳細スライダーの2段階
+      const hlInputs = document.querySelectorAll<HTMLInputElement>('input[data-hl]');
+      const sparkleInput = $<HTMLInputElement>('sparkle');
+
+      function syncHighlightUI() {
+        hlInputs.forEach((el) => (el.value = String(state.hl[el.dataset.hl as keyof Highlight])));
+        sparkleInput.checked = state.sparkle;
+        document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+          b.setAttribute('aria-pressed', String(b.dataset.preset === state.preset)),
+        );
+      }
+
+      document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const { sparkle, ...hl } = PRESETS[btn.dataset.preset!];
+          state.hl = { ...hl };
+          state.sparkle = sparkle;
+          state.preset = btn.dataset.preset!;
+          syncHighlightUI();
+          render();
+        }),
+      );
+
+      hlInputs.forEach((el) =>
+        el.addEventListener('input', () => {
+          state.hl[el.dataset.hl as keyof Highlight] = Number(el.value);
+          state.preset = ''; // 手で動かしたらプリセットの選択表示を外す
+          syncHighlightUI();
+          render();
+        }),
+      );
+      sparkleInput.addEventListener('change', () => {
+        state.sparkle = sparkleInput.checked;
+        render();
+      });
+
+      // ---------- 書き出し ----------
+
+      function download(blob: Blob, filename: string) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename; // download 属性を付けると、開かずに保存される
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }
+
+      function svgBlob() {
+        const xml = new XMLSerializer().serializeToString(svg);
+        return new Blob([xml], { type: 'image/svg+xml' });
+      }
+
+      $<HTMLButtonElement>('saveSvg').addEventListener('click', () => download(svgBlob(), 'puffy-icon.svg'));
+
+      // PNG：SVG を一度 <img> として読み込み、canvas に描いてから PNG に変換する
+      $<HTMLButtonElement>('savePng').addEventListener('click', async () => {
+        const url = URL.createObjectURL(svgBlob());
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, SIZE, SIZE);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => blob && download(blob, 'puffy-icon.png'), 'image/png');
+      });
+
+      syncHighlightUI();
+      render();
+    </script>
+  </body>
+</html>
