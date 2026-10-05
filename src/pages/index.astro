@@ -1,0 +1,21 @@
+---
+// GitHub Pages では URL が /リポジトリ名/ から始まるため、
+// "/favicon.svg" のような絶対パスだとリンク切れになる。
+// BASE_URL（astro.config.mjs の base）を頭につけて回避する。
+const base = import.meta.env.BASE_URL;
+---
+
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+		<link rel="icon" href={`${base}favicon.ico`} />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>tool_site</title>
+	</head>
+	<body>
+		<h1>tool_site</h1>
+		<p>準備中です。</p>
+	</body>
+</html>
