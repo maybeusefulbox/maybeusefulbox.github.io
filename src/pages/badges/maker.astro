@@ -1,0 +1,286 @@
+---
+// バッジの色変更ツール。好きな色・モチーフ・ツヤでバッジを作って保存できる。
+// 描画は配布素材と同じ renderBadgeSvg() をブラウザ側で呼んでいるので、見た目は素材と一致する。
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { motifs } from '../../data/badges';
+
+const base = import.meta.env.BASE_URL;
+
+// おすすめの色見本
+const swatches = [
+  '#3a8ee6', '#5bc0f8', '#2fbf9b', '#8ccf3f', '#f5c623', '#f59a23',
+  '#e64545', '#f06aa8', '#ff9ec7', '#9b6ae6', '#6b7a99', '#333a4d',
+];
+---
+
+<BaseLayout title="バッジの色変更ツール" description="グロッシーバッジを好きな色で作って、SVG・PNGで保存できるツールです。">
+  <p><a href={`${base}badges/`}>バッジ素材一覧へ戻る</a></p>
+  <h1>バッジの色変更ツール</h1>
+  <p class="lead">好きな色を選ぶだけで、ツヤツヤのバッジを作れます。作ったバッジはそのまま保存できます。</p>
+
+  <div class="layout">
+    <section class="preview">
+      <div id="preview" class="stage"></div>
+      <p class="hex" id="hexLabel"></p>
+    </section>
+
+    <section class="panel">
+      <div class="row">
+        <span class="label">色</span>
+        <div class="swatches">
+          {swatches.map((c) => (
+            <button type="button" class="swatch" data-color={c} style={`background:${c}`} aria-label={c} />
+          ))}
+        </div>
+        <label class="inline">
+          <input type="color" id="color" value="#3a8ee6" />
+          <span class="note">自由に選ぶ</span>
+        </label>
+      </div>
+
+      <fieldset class="row">
+        <legend class="label">モチーフ</legend>
+        <div class="inline">
+          {motifs.map((m, i) => (
+            <label><input type="radio" name="motif" value={m.key} checked={i === 0} /> {m.name}</label>
+          ))}
+          <label><input type="radio" name="motif" value="none" /> なし</label>
+        </div>
+      </fieldset>
+
+      <div class="row">
+        <span class="label">ツヤ</span>
+        <div class="inline" id="presets">
+          <button type="button" class="chip" data-preset="normal">ふつう</button>
+          <button type="button" class="chip" data-preset="soft">ひかえめ</button>
+          <button type="button" class="chip" data-preset="strong">つよめ</button>
+          <button type="button" class="chip" data-preset="none">なし</button>
+        </div>
+        <!-- 上級者向け：普段は閉じておき、開いた人だけスライダーを触れるようにする -->
+        <details>
+          <summary>詳細設定を開く</summary>
+          <label class="row"><span>横位置</span><input type="range" data-hl="cx" min="20" max="80" step="0.5" /></label>
+          <label class="row"><span>縦位置</span><input type="range" data-hl="cy" min="10" max="60" step="0.5" /></label>
+          <label class="row"><span>横幅</span><input type="range" data-hl="rx" min="8" max="44" step="0.5" /></label>
+          <label class="row"><span>高さ</span><input type="range" data-hl="ry" min="5" max="40" step="0.5" /></label>
+          <label class="row"><span>濃さ</span><input type="range" data-hl="opacity" min="0" max="1" step="0.01" /></label>
+        </details>
+      </div>
+
+      <div class="row">
+        <span class="label">保存</span>
+        <label class="inline">
+          PNGのサイズ
+          <select id="pngSize">
+            <option value="128">128×128</option>
+            <option value="256">256×256</option>
+            <option value="512" selected>512×512</option>
+          </select>
+        </label>
+        <div class="inline">
+          <button type="button" class="btn" id="savePng">PNGで保存</button>
+          <button type="button" class="btn" id="saveSvg">SVGで保存</button>
+        </div>
+        <p class="note">
+          作ったバッジは、<a href={`${base}terms/`}>利用規約</a>の範囲で個人・商用を問わず無料でお使いいただけます。
+        </p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .lead { color: #666; font-size: 0.9rem; }
+  .layout { display: grid; gap: 24px; }
+  @media (min-width: 760px) {
+    .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  }
+  .stage {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #dfe5f0;
+    background: repeating-conic-gradient(#eef1f6 0 25%, #fff 0 50%) 0 0 / 24px 24px;
+  }
+  .stage :global(svg) { display: block; width: 100%; height: 100%; }
+  .hex { text-align: center; font-family: monospace; color: #666; }
+
+  .panel {
+    background: #fff;
+    border: 1px solid #dfe5f0;
+    border-radius: 16px;
+    padding: 16px;
+    display: grid;
+    gap: 18px;
+  }
+  .row { display: grid; gap: 6px; }
+  .label, legend { font-size: 0.85rem; font-weight: bold; }
+  fieldset { border: 0; margin: 0; padding: 0; }
+  .inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.9rem; }
+  .note { font-size: 0.75rem; color: #777; margin: 0; }
+  input[type='range'] { width: 100%; }
+  input[type='color'] { width: 40px; height: 32px; padding: 0; border: 1px solid #dfe5f0; border-radius: 6px; }
+
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .swatch {
+    aspect-ratio: 1;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px #ccd3e0, inset 0 -3px 4px rgba(0, 0, 0, 0.2), inset 0 3px 3px rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+  }
+  .swatch[aria-pressed='true'] { box-shadow: 0 0 0 3px #333a4d; }
+
+  .chip {
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid #ccd3e0;
+    background: #fff;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .chip[aria-pressed='true'] { background: #333a4d; border-color: #333a4d; color: #fff; }
+
+  details summary { cursor: pointer; font-size: 0.85rem; color: #2a6fc0; }
+  details[open] { display: grid; gap: 8px; }
+  details .row span { font-size: 0.8rem; }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid #2a6fc0;
+    background: linear-gradient(#6fb1f5, #2f7fd6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    color: #fff;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+</style>
+
+<script>
+  // ブラウザ側でも、配布素材と同じ関数で SVG を組み立てる
+  import { renderBadgeSvg, type Motif } from '../../lib/badge-svg';
+
+  type Highlight = { cx: number; cy: number; rx: number; ry: number; opacity: number };
+
+  // ツヤのおまかせ設定。数値は viewBox（0〜100）上の位置・大きさ
+  const PRESETS: Record<string, Highlight> = {
+    normal: { cx: 50, cy: 30, rx: 32, ry: 19, opacity: 0.9 },
+    soft: { cx: 50, cy: 28, rx: 26, ry: 14, opacity: 0.55 },
+    strong: { cx: 50, cy: 32, rx: 36, ry: 23, opacity: 1 },
+    none: { cx: 50, cy: 30, rx: 32, ry: 19, opacity: 0 },
+  };
+
+  const state = {
+    color: '#3a8ee6',
+    motif: 'star' as Motif,
+    hl: { ...PRESETS.normal },
+    preset: 'normal',
+  };
+
+  const preview = document.getElementById('preview')!;
+  const hexLabel = document.getElementById('hexLabel')!;
+  const colorInput = document.getElementById('color') as HTMLInputElement;
+  const hlInputs = document.querySelectorAll<HTMLInputElement>('input[data-hl]');
+
+  function svgString(size?: number) {
+    return renderBadgeSvg({
+      color: state.color,
+      motif: state.motif,
+      highlight: state.hl,
+      size,
+      title: 'グロッシーバッジ',
+      idPrefix: 'maker',
+    });
+  }
+
+  function render() {
+    preview.innerHTML = svgString();
+    hexLabel.textContent = state.color;
+    colorInput.value = state.color;
+    document.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.color === state.color)),
+    );
+    document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.preset === state.preset)),
+    );
+    hlInputs.forEach((el) => (el.value = String(state.hl[el.dataset.hl as keyof Highlight])));
+  }
+
+  // ---------- 操作 ----------
+
+  document.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.color = b.dataset.color!;
+      render();
+    }),
+  );
+  // input イベント：カラーピッカーを動かしている最中も、リアルタイムに反映される
+  colorInput.addEventListener('input', () => {
+    state.color = colorInput.value;
+    render();
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="motif"]').forEach((el) =>
+    el.addEventListener('change', () => {
+      state.motif = el.value as Motif;
+      render();
+    }),
+  );
+
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.preset = b.dataset.preset!;
+      state.hl = { ...PRESETS[state.preset] };
+      render();
+    }),
+  );
+  hlInputs.forEach((el) =>
+    el.addEventListener('input', () => {
+      state.hl[el.dataset.hl as keyof Highlight] = Number(el.value);
+      state.preset = ''; // 手で動かしたら、プリセットの選択表示を外す
+      render();
+    }),
+  );
+
+  // ---------- 保存 ----------
+
+  function fileBase() {
+    return `glossy-badge-${state.motif}-${state.color.slice(1)}`;
+  }
+
+  function download(blob: Blob, filename: string) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  document.getElementById('saveSvg')!.addEventListener('click', () => {
+    download(new Blob([svgString(256)], { type: 'image/svg+xml' }), `${fileBase()}.svg`);
+  });
+
+  // PNG：SVG を画像として読み込み、指定サイズの canvas に描いてから PNG に変換する
+  document.getElementById('savePng')!.addEventListener('click', async () => {
+    const size = Number((document.getElementById('pngSize') as HTMLSelectElement).value);
+    const url = URL.createObjectURL(new Blob([svgString(size)], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas.getContext('2d')!.drawImage(img, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    canvas.toBlob((blob) => blob && download(blob, `${fileBase()}-${size}.png`), 'image/png');
+  });
+
+  render();
+</script>
