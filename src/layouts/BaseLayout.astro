@@ -1,0 +1,41 @@
+---
+// 全ページ共通の <html>〜<body> の枠。各ページは中身だけを <slot /> に流し込む。
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = '小説投稿者向けのフリー素材と、ぷっくりアイコンメーカー。' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const siteName = 'tool_site';
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <link rel="icon" href={`${base}favicon.ico`} />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title === siteName ? siteName : `${title} | ${siteName}`}</title>
+    <style is:global>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        font-family: 'Hiragino Maru Gothic ProN', 'M PLUS Rounded 1c', sans-serif;
+        background: #f4f6fb;
+        color: #333;
+        line-height: 1.7;
+      }
+      main { max-width: 960px; margin: 0 auto; }
+      a { color: #2a6fc0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
