@@ -1,0 +1,25 @@
+---
+import { SITE_NAME } from '../data/site';
+
+const base = import.meta.env.BASE_URL;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <p>
+    <a href={base}>トップ</a> ｜ <a href={`${base}terms/`}>素材の利用規約</a>
+  </p>
+  <p class="copy">&copy; {year} {SITE_NAME} ／ Thank you for visiting!</p>
+</footer>
+
+<style>
+  .site-footer {
+    max-width: 960px;
+    margin: 24px auto 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #5a7393;
+  }
+  .site-footer p { margin: 4px 0; }
+  .copy { letter-spacing: 0.05em; }
+</style>

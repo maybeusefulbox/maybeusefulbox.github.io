@@ -2,6 +2,7 @@
 // バッジの色変更ツール。好きな色・モチーフ・ツヤでバッジを作って保存できる。
 // 描画は配布素材と同じ renderBadgeSvg() をブラウザ側で呼んでいるので、見た目は素材と一致する。
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import GlossyPill from '../../components/GlossyPill.astro';
 import { motifs } from '../../data/badges';
 
 const base = import.meta.env.BASE_URL;
@@ -14,7 +15,6 @@ const swatches = [
 ---
 
 <BaseLayout title="バッジの色変更ツール" description="グロッシーバッジを好きな色で作って、SVG・PNGで保存できるツールです。">
-  <p><a href={`${base}badges/`}>バッジ素材一覧へ戻る</a></p>
   <h1>バッジの色変更ツール</h1>
   <p class="lead">好きな色を選ぶだけで、ツヤツヤのバッジを作れます。作ったバッジはそのまま保存できます。</p>
 
@@ -78,8 +78,8 @@ const swatches = [
           </select>
         </label>
         <div class="inline">
-          <button type="button" class="btn" id="savePng">PNGで保存</button>
-          <button type="button" class="btn" id="saveSvg">SVGで保存</button>
+          <GlossyPill id="savePng" color="#3a8ee6">PNGで保存</GlossyPill>
+          <GlossyPill id="saveSvg" color="#6b7a99">SVGで保存</GlossyPill>
         </div>
         <p class="note">
           作ったバッジは、<a href={`${base}terms/`}>利用規約</a>の範囲で個人・商用を問わず無料でお使いいただけます。
@@ -149,18 +149,6 @@ const swatches = [
   details[open] { display: grid; gap: 8px; }
   details .row span { font-size: 0.8rem; }
 
-  .btn {
-    padding: 8px 18px;
-    border-radius: 999px;
-    border: 1px solid #2a6fc0;
-    background: linear-gradient(#6fb1f5, #2f7fd6);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    color: #fff;
-    font: inherit;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .btn:hover { filter: brightness(1.08); }
 </style>
 
 <script>

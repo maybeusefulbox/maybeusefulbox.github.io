@@ -3,18 +3,20 @@
 // 素材の一覧は src/data/badges.ts にあり、ファイル本体は [id].svg.ts / [id].png.ts がビルド時に生成する。
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GlossyBadge from '../../components/GlossyBadge.astro';
+import GlossyPill from '../../components/GlossyPill.astro';
 import { badges, motifs, PNG_SIZE } from '../../data/badges';
 
 const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title="グロッシーバッジ素材" description="2000年代風のツヤツヤ丸バッジ素材。SVG・PNGで無料配布しています。">
-  <p><a href={base}>トップへ戻る</a></p>
   <h1>グロッシーバッジ素材</h1>
   <p>
     ツヤツヤの丸いバッジ素材です。SVG（拡大しても劣化しない形式）と PNG（{PNG_SIZE}×{PNG_SIZE}px・背景透明）を用意しています。
   </p>
-  <p><a href={`${base}badges/maker/`}>好きな色で作る → バッジの色変更ツール</a></p>
+  <p>
+    <GlossyPill href={`${base}badges/maker/`} color="#2fbf9b" size="sm">好きな色で作る → 色変更ツール</GlossyPill>
+  </p>
 
   <!-- 利用規約の要点はダウンロードボタンの近くに常に見せる -->
   <aside class="terms">
@@ -39,8 +41,8 @@ const base = import.meta.env.BASE_URL;
               <figcaption>{b.name}</figcaption>
               <div class="dl">
                 {/* download 属性：リンク先を開かずに、指定したファイル名で保存させる */}
-                <a class="btn" href={`${base}badges/${b.id}.svg`} download={`glossy-badge-${b.id}.svg`}>SVG</a>
-                <a class="btn" href={`${base}badges/${b.id}.png`} download={`glossy-badge-${b.id}.png`}>PNG</a>
+                <GlossyPill size="sm" color={b.color} href={`${base}badges/${b.id}.svg`} download={`glossy-badge-${b.id}.svg`}>SVG</GlossyPill>
+                <GlossyPill size="sm" color={b.color} href={`${base}badges/${b.id}.png`} download={`glossy-badge-${b.id}.png`}>PNG</GlossyPill>
               </div>
             </figure>
           ))}
@@ -51,40 +53,27 @@ const base = import.meta.env.BASE_URL;
 
 <style>
   .terms {
-    background: #fff;
-    border: 1px solid #dfe5f0;
+    background: #f6faff;
+    border: 1px solid #cfe1f5;
     border-left: 4px solid #3a8ee6;
     border-radius: 8px;
     padding: 12px 16px;
     font-size: 0.85rem;
   }
   .terms ul { margin: 6px 0; padding-left: 1.2em; }
-  h2 { font-size: 1.1rem; margin-top: 32px; }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
   }
   .card {
     margin: 0;
     padding: 12px 8px;
-    background: #fff;
-    border: 1px solid #dfe5f0;
+    background: linear-gradient(#fff, #f3f8ff);
+    border: 1px solid #cfe1f5;
     border-radius: 12px;
     text-align: center;
   }
   figcaption { font-size: 0.8rem; color: #555; }
   .dl { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
-  .btn {
-    padding: 2px 12px;
-    border-radius: 999px;
-    border: 1px solid #2a6fc0;
-    background: linear-gradient(#6fb1f5, #2f7fd6);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-decoration: none;
-  }
-  .btn:hover { filter: brightness(1.08); }
 </style>

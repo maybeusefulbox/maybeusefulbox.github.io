@@ -1,16 +1,118 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import GlossyBadge from '../components/GlossyBadge.astro';
+import GlossyPill from '../components/GlossyPill.astro';
+import { SITE_NAME, updates } from '../data/site';
 
 const base = import.meta.env.BASE_URL;
+
+// トップページに並べるコンテンツの紹介カード
+const contents = [
+  {
+    title: 'グロッシーバッジ素材',
+    text: 'ツヤツヤの丸いバッジ素材。SVG・PNGで無料配布しています。',
+    href: 'badges/',
+    color: '#3a8ee6',
+    motif: 'star' as const,
+  },
+  {
+    title: 'バッジの色変更ツール',
+    text: '好きな色・ツヤでバッジを作って、そのまま保存できます。',
+    href: 'badges/maker/',
+    color: '#2fbf9b',
+    motif: 'heart' as const,
+  },
+  {
+    title: 'ぷっくりアイコンメーカー',
+    text: '手持ちの画像を、シール風のぷっくりアイコンに加工できます。',
+    href: 'puffy/',
+    color: '#f59a23',
+    motif: 'heart' as const,
+  },
+];
+
+const comingSoon = ['小説の表紙テンプレート', 'ブラウザゲーム'];
 ---
 
-<BaseLayout title="tool_site">
-  <h1>tool_site</h1>
-  <p>準備中です。</p>
-  <ul>
-    <li><a href={`${base}badges/`}>グロッシーバッジ素材</a></li>
-    <li><a href={`${base}badges/maker/`}>バッジの色変更ツール</a></li>
-    <li><a href={`${base}puffy/`}>ぷっくりアイコンメーカー</a></li>
-    <li><a href={`${base}terms/`}>素材の利用規約</a></li>
-  </ul>
+<BaseLayout title={SITE_NAME}>
+  <section class="hero">
+    <div class="hero-badges" aria-hidden="true">
+      <GlossyBadge color="#f06aa8" motif="heart" size={64} title="" />
+      <GlossyBadge color="#3a8ee6" motif="star" size={84} title="" />
+      <GlossyBadge color="#2fbf9b" motif="star" size={64} title="" />
+    </div>
+    <h1>ようこそ！</h1>
+    <p>
+      小説投稿サイトやSNSで使える、ツヤツヤでちょっと懐かしいフリー素材とツールを置いています。<br />
+      素材はすべて無料で、個人・商用を問わずお使いいただけます。
+    </p>
+  </section>
+
+  <h2>コンテンツ</h2>
+  <div class="cards">
+    {contents.map((c) => (
+      <a class="card" href={base + c.href}>
+        <GlossyBadge color={c.color} motif={c.motif} size={56} title="" />
+        <span>
+          <strong>{c.title}</strong>
+          <span class="card-text">{c.text}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+  <p class="soon">準備中：{comingSoon.join('・')}</p>
+
+  <h2>更新履歴</h2>
+  <dl class="updates">
+    {updates.map((u) => (
+      <>
+        <dt>{u.date.replaceAll('-', '.')}</dt>
+        <dd>{u.text}</dd>
+      </>
+    ))}
+  </dl>
+
+  <p class="cta">
+    <GlossyPill href={`${base}badges/`} color="#3a8ee6">素材を見にいく</GlossyPill>
+  </p>
 </BaseLayout>
+
+<style>
+  .hero { text-align: center; padding: 8px 0 4px; }
+  .hero-badges { display: flex; justify-content: center; align-items: end; gap: 8px; }
+  .hero h1 { margin-top: 0.4em; }
+  .hero p { font-size: 0.95rem; }
+
+  .cards { display: grid; gap: 12px; }
+  @media (min-width: 720px) {
+    .cards { grid-template-columns: repeat(3, 1fr); }
+  }
+  .card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid #cfe1f5;
+    border-radius: 14px;
+    background: linear-gradient(#fff, #f3f8ff);
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(58, 110, 170, 0.15); }
+  .card :global(svg) { flex-shrink: 0; }
+  .card strong { display: block; color: #2a5a96; }
+  .card-text { display: block; font-size: 0.8rem; color: #5a6475; line-height: 1.6; }
+  .soon { font-size: 0.8rem; color: #8a93a3; }
+
+  .updates {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .updates dt { font-family: monospace; color: #6fb1f5; font-weight: bold; }
+  .updates dd { margin: 0; }
+  .cta { text-align: center; margin-top: 28px; }
+</style>

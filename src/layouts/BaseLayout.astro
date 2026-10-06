@@ -1,13 +1,18 @@
 ---
-// 全ページ共通の <html>〜<body> の枠。各ページは中身だけを <slot /> に流し込む。
+// 全ページ共通の枠。ヘッダー・本文の板・フッターを並べ、各ページの中身は <slot /> に入る。
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { SITE_NAME, SITE_TAGLINE } from '../data/site';
+
 interface Props {
   title: string;
   description?: string;
+  /** 本文の板（白い枠）を使わず、ページ側で自由にレイアウトしたいとき true */
+  bare?: boolean;
 }
 
-const { title, description = '小説投稿者向けのフリー素材と、ぷっくりアイコンメーカー。' } = Astro.props;
+const { title, description = SITE_TAGLINE, bare = false } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const siteName = 'tool_site';
 ---
 
 <html lang="ja">
@@ -18,24 +23,60 @@ const siteName = 'tool_site';
     <link rel="icon" href={`${base}favicon.ico`} />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <title>{title === siteName ? siteName : `${title} | ${siteName}`}</title>
+    <title>{title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`}</title>
+    <!-- 丸ゴシックの Web フォント。display=swap で、読み込み前も文字は先に表示される -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style is:global>
       * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
       body {
         margin: 0;
-        padding: 24px 16px 48px;
-        font-family: 'Hiragino Maru Gothic ProN', 'M PLUS Rounded 1c', sans-serif;
-        background: #f4f6fb;
-        color: #333;
-        line-height: 1.7;
+        padding: 16px 12px 32px;
+        font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', sans-serif;
+        color: #333a4d;
+        line-height: 1.75;
+        /* 2000年代のホームページ風：水色の地に白い水玉 */
+        background-color: #dcecff;
+        background-image: radial-gradient(#ffffff 22%, transparent 24%);
+        background-size: 22px 22px;
       }
-      main { max-width: 960px; margin: 0 auto; }
       a { color: #2a6fc0; }
+      h1 { font-size: 1.5rem; line-height: 1.4; margin: 0.2em 0 0.6em; color: #2a5a96; }
+      h2 {
+        font-size: 1.1rem;
+        margin: 1.8em 0 0.6em;
+        padding: 0.2em 0.7em;
+        border-left: 6px solid #6fb1f5;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #eaf4ff, transparent);
+        color: #2a5a96;
+      }
+      /* 本文の板：白地に二重の縁取り */
+      .site-main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 20px 20px 32px;
+        background: #fff;
+        border: 2px solid #fff;
+        border-radius: 18px;
+        box-shadow: 0 0 0 1px #b9d4f0, 0 3px 8px rgba(58, 110, 170, 0.12);
+      }
+      .site-main.bare { background: transparent; border: 0; box-shadow: none; padding: 0; }
+      @media (max-width: 480px) {
+        .site-main { padding: 16px 14px 24px; }
+      }
     </style>
   </head>
   <body>
-    <main>
+    <SiteHeader />
+    <main class:list={['site-main', { bare }]}>
       <slot />
     </main>
+    <SiteFooter />
   </body>
 </html>
