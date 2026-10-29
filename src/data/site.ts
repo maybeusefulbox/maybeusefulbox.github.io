@@ -14,6 +14,7 @@ export const nav = [
 
 /** 更新履歴（新しいものを上に足していく） */
 export const updates = [
+  { date: '2026-10-29', text: 'サイトのURLを https://maybeusefulbox.github.io/ に移転しました' },
   { date: '2026-10-06', text: 'バッジの色変更ツールを公開しました' },
   { date: '2026-10-06', text: 'グロッシーバッジ素材の配布を始めました' },
   { date: '2026-10-05', text: 'ぷっくりアイコンメーカーを公開しました' },
