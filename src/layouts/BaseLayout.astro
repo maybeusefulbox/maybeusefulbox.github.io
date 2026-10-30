@@ -1,17 +1,15 @@
 ---
-// 全ページ共通の枠。ヘッダー・本文の板・フッターを並べ、各ページの中身は <slot /> に入る。
+// 全ページ共通の枠。ヘッダー・本文・フッターを並べ、各ページの中身は <slot /> に入る。
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import { SITE_NAME, SITE_TAGLINE } from '../data/site';
+import { SITE_NAME, SITE_DESCRIPTION } from '../data/site';
 
 interface Props {
   title: string;
   description?: string;
-  /** 本文の板（白い枠）を使わず、ページ側で自由にレイアウトしたいとき true */
-  bare?: boolean;
 }
 
-const { title, description = SITE_TAGLINE, bare = false } = Astro.props;
+const { title, description = SITE_DESCRIPTION } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -28,53 +26,53 @@ const base = import.meta.env.BASE_URL;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style is:global>
+      /* サイト全体の色。ここを変えると全ページの色が変わる */
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --text: #3b3330;
+        --muted: #7a706b;
+        --accent: #a0673f; /* コーヒーっぽい茶色 */
+        --line: #e6dfda;
+        --ph-bg: #ece7e3; /* 画像の仮置き場の色 */
+        --ph-text: #8a7f78;
+        --footer-bg: #4a3d37;
+        --footer-text: #f4eee9;
+      }
       * { box-sizing: border-box; }
       [hidden] { display: none !important; }
       body {
         margin: 0;
-        padding: 16px 12px 32px;
-        font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', sans-serif;
-        color: #333a4d;
-        line-height: 1.75;
-        /* 2000年代のホームページ風：水色の地に白い水玉 */
-        background-color: #dcecff;
-        background-image: radial-gradient(#ffffff 22%, transparent 24%);
-        background-size: 22px 22px;
+        font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.85;
       }
-      a { color: #2a6fc0; }
-      h1 { font-size: 1.5rem; line-height: 1.4; margin: 0.2em 0 0.6em; color: #2a5a96; }
-      h2 {
-        font-size: 1.1rem;
-        margin: 1.8em 0 0.6em;
-        padding: 0.2em 0.7em;
-        border-left: 6px solid #6fb1f5;
-        border-radius: 4px;
-        background: linear-gradient(90deg, #eaf4ff, transparent);
-        color: #2a5a96;
-      }
-      /* 本文の板：白地に二重の縁取り */
+      a { color: var(--accent); }
+      h1, h2, h3 { line-height: 1.4; letter-spacing: 0.08em; }
+      h1 { font-size: 1.6rem; margin: 0.4em 0 0.5em; }
+      h2 { font-size: 1.5rem; margin: 1.6em 0 0.6em; }
+      h3 { font-size: 1.05rem; margin: 1.4em 0 0.3em; }
+      img { max-width: 100%; height: auto; }
+
+      /* 本文の幅をそろえる入れ物 */
       .site-main {
-        max-width: 960px;
+        max-width: 1080px;
         margin: 0 auto;
-        padding: 20px 20px 32px;
-        background: #fff;
-        border: 2px solid #fff;
-        border-radius: 18px;
-        box-shadow: 0 0 0 1px #b9d4f0, 0 3px 8px rgba(58, 110, 170, 0.12);
+        padding: 0 16px;
       }
-      .site-main.bare { background: transparent; border: 0; box-shadow: none; padding: 0; }
-      @media (max-width: 480px) {
-        .site-main { padding: 16px 14px 24px; }
+      @media (min-width: 768px) {
+        .site-main { padding: 0 32px; }
       }
     </style>
   </head>
   <body>
     <SiteHeader />
-    <main class:list={['site-main', { bare }]}>
+    <main class="site-main">
       <slot />
     </main>
     <SiteFooter />

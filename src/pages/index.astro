@@ -1,118 +1,126 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import GlossyBadge from '../components/GlossyBadge.astro';
-import GlossyPill from '../components/GlossyPill.astro';
-import { SITE_NAME, updates } from '../data/site';
+import Placeholder from '../components/Placeholder.astro';
+import { SITE_NAME, contents } from '../data/site';
 
 const base = import.meta.env.BASE_URL;
-
-// トップページに並べるコンテンツの紹介カード
-const contents = [
-  {
-    title: 'グロッシーバッジ素材',
-    text: 'ツヤツヤの丸いバッジ素材。SVG・PNGで無料配布しています。',
-    href: 'badges/',
-    color: '#3a8ee6',
-    motif: 'star' as const,
-  },
-  {
-    title: 'バッジの色変更ツール',
-    text: '好きな色・ツヤでバッジを作って、そのまま保存できます。',
-    href: 'badges/maker/',
-    color: '#2fbf9b',
-    motif: 'heart' as const,
-  },
-  {
-    title: 'ぷっくりアイコンメーカー',
-    text: '手持ちの画像を、シール風のぷっくりアイコンに加工できます。',
-    href: 'puffy/',
-    color: '#f59a23',
-    motif: 'heart' as const,
-  },
-];
-
-const comingSoon = ['小説の表紙テンプレート', 'ブラウザゲーム'];
 ---
 
 <BaseLayout title={SITE_NAME}>
-  <section class="hero">
-    <div class="hero-badges" aria-hidden="true">
-      <GlossyBadge color="#f06aa8" motif="heart" size={64} title="" />
-      <GlossyBadge color="#3a8ee6" motif="star" size={84} title="" />
-      <GlossyBadge color="#2fbf9b" motif="star" size={64} title="" />
+  <!-- メインイメージ（PCのみ表示） -->
+  <div class="hero">
+    <Placeholder label={'メインイメージ\n（箱っぽいの）'} />
+  </div>
+
+  <!-- コンテンツタイル：スマホ2列、PC4列 -->
+  <ul class="tiles">
+    {contents.map((c) => (
+      <li>
+        {c.href ? (
+          <a class="tile" href={base + c.href}>
+            <span class="tile-label">{c.label}</span>
+          </a>
+        ) : (
+          <div class="tile soon">
+            <span class="tile-label">{c.label}</span>
+            <span class="soon-tag">準備中</span>
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+
+  <section class="row">
+    <div class="text">
+      <h2>本サイトについて</h2>
+      <p>
+        誰かの役に立つような立たないような気がするツールや素材を配布するサイトです。<br />
+        コーヒーでも飲みながらゆるく楽しんでください。
+      </p>
     </div>
-    <h1>ようこそ！</h1>
-    <p>
-      小説投稿サイトやSNSで使える、ツヤツヤでちょっと懐かしいフリー素材とツールを置いています。<br />
-      素材はすべて無料で、個人・商用を問わずお使いいただけます。
-    </p>
+    <Placeholder label="コーヒーっぽいイメージ" ratio="500 / 215" class="row-img" />
   </section>
 
-  <h2>コンテンツ</h2>
-  <div class="cards">
-    {contents.map((c) => (
-      <a class="card" href={base + c.href}>
-        <GlossyBadge color={c.color} motif={c.motif} size={56} title="" />
-        <span>
-          <strong>{c.title}</strong>
-          <span class="card-text">{c.text}</span>
-        </span>
-      </a>
-    ))}
-  </div>
-  <p class="soon">準備中：{comingSoon.join('・')}</p>
-
-  <h2>更新履歴</h2>
-  <dl class="updates">
-    {updates.map((u) => (
-      <>
-        <dt>{u.date.replaceAll('-', '.')}</dt>
-        <dd>{u.text}</dd>
-      </>
-    ))}
-  </dl>
-
-  <p class="cta">
-    <GlossyPill href={`${base}badges/`} color="#3a8ee6">素材を見にいく</GlossyPill>
-  </p>
+  <!-- PCでは画像が左・文章が右（上のセクションと左右を入れ替える） -->
+  <section class="row reverse">
+    <div class="text">
+      <h2>利用規約</h2>
+      <p>
+        配布している素材やツールは、個人・商用を問わず無料でお使いいただけます。<br />
+        再配布や自作発言など、いくつかのお願いがあるので、ご利用前に一度ご確認ください。
+      </p>
+      <p><a href={`${base}terms/`}>利用規約を読む →</a></p>
+    </div>
+    <Placeholder label="ゆるいイメージ" ratio="500 / 215" class="row-img" />
+  </section>
 </BaseLayout>
 
 <style>
-  .hero { text-align: center; padding: 8px 0 4px; }
-  .hero-badges { display: flex; justify-content: center; align-items: end; gap: 8px; }
-  .hero h1 { margin-top: 0.4em; }
-  .hero p { font-size: 0.95rem; }
+  .hero { display: none; }
 
-  .cards { display: grid; gap: 12px; }
-  @media (min-width: 720px) {
-    .cards { grid-template-columns: repeat(3, 1fr); }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
   }
-  .card {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 14px;
-    border: 1px solid #cfe1f5;
-    border-radius: 14px;
-    background: linear-gradient(#fff, #f3f8ff);
-    color: inherit;
+  .tile {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    padding: 8px;
+    border-radius: 16px;
+    background: var(--ph-bg);
+    color: var(--text);
+    text-align: center;
     text-decoration: none;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.4;
     transition: transform 0.15s, box-shadow 0.15s;
   }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(58, 110, 170, 0.15); }
-  .card :global(svg) { flex-shrink: 0; }
-  .card strong { display: block; color: #2a5a96; }
-  .card-text { display: block; font-size: 0.8rem; color: #5a6475; line-height: 1.6; }
-  .soon { font-size: 0.8rem; color: #8a93a3; }
-
-  .updates {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 16px;
-    margin: 0;
-    font-size: 0.9rem;
+  .tile-label { white-space: pre-line; } /* \n を改行として表示 */
+  a.tile:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(60, 40, 30, 0.15); }
+  .tile.soon { color: var(--ph-text); }
+  .soon-tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.7rem;
+    font-weight: 500;
   }
-  .updates dt { font-family: monospace; color: #6fb1f5; font-weight: bold; }
-  .updates dd { margin: 0; }
-  .cta { text-align: center; margin-top: 28px; }
+
+  .row { margin-top: 48px; }
+  .row .text p { margin: 0 0 0.6em; }
+  .row :global(.row-img) { margin-top: 16px; }
+
+  @media (min-width: 768px) {
+    .hero {
+      display: block;
+      max-width: 500px;
+      margin: 0 auto 64px;
+    }
+    .tiles { grid-template-columns: repeat(4, 1fr); gap: 48px; padding: 0 3%; }
+    .tile { font-size: 1.2rem; }
+
+    /* 文章と画像を横に並べる */
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-top: 88px;
+      padding: 0 3%;
+    }
+    .row h2 { margin-top: 0; }
+    .row :global(.row-img) { margin-top: 0; }
+    /* 2つ目のセクションは画像を左に */
+    .row.reverse :global(.row-img) { order: -1; }
+  }
 </style>

@@ -1,0 +1,32 @@
+---
+// 画像の仮置き場。ワイヤーのグレーの箱にあたる部品。
+// 画像ができたら、この <Placeholder ... /> を <img src="..." alt="..." /> に差し替える。
+interface Props {
+  /** 箱の中に表示する説明（\n で改行） */
+  label: string;
+  /** 縦横比。例：'1 / 1'（正方形）、'16 / 9' */
+  ratio?: string;
+  class?: string;
+}
+
+const { label, ratio = '1 / 1', class: className } = Astro.props;
+---
+
+<div class:list={['ph', className]} style={`aspect-ratio: ${ratio}`} role="img" aria-label={label.replaceAll('\n', '')}>
+  <span>{label}</span>
+</div>
+
+<style>
+  .ph {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 8px;
+    border-radius: 14px;
+    background: var(--ph-bg);
+    color: var(--ph-text);
+    font-size: 0.95rem;
+    text-align: center;
+    white-space: pre-line; /* label の \n を改行として表示する */
+  }
+</style>

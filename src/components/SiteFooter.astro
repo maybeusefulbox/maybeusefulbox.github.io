@@ -1,25 +1,47 @@
 ---
-import { SITE_NAME } from '../data/site';
+import { SITE_NAME, nav } from '../data/site';
 
 const base = import.meta.env.BASE_URL;
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <p>
-    <a href={base}>トップ</a> ｜ <a href={`${base}terms/`}>素材の利用規約</a>
-  </p>
-  <p class="copy">&copy; {year} {SITE_NAME} ／ Thank you for visiting!</p>
+  <div class="inner">
+    <p class="footer-title">{SITE_NAME}</p>
+    <nav aria-label="フッターメニュー">
+      <ul>
+        {nav.map((item) => (
+          <li><a href={base + item.path}>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <p class="copy">&copy; {year} {SITE_NAME}</p>
+  </div>
 </footer>
 
 <style>
   .site-footer {
-    max-width: 960px;
-    margin: 24px auto 0;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #5a7393;
+    margin-top: 64px;
+    background: var(--footer-bg);
+    color: var(--footer-text);
   }
-  .site-footer p { margin: 4px 0; }
-  .copy { letter-spacing: 0.05em; }
+  .inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 16px 56px;
+    text-align: center;
+  }
+  .footer-title { margin: 0 0 16px; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 24px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a { color: inherit; text-decoration: none; font-size: 0.9rem; }
+  a:hover { text-decoration: underline; }
+  .copy { margin: 32px 0 0; font-size: 0.75rem; opacity: 0.7; }
 </style>

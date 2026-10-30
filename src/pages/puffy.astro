@@ -3,21 +3,39 @@
 // アップロードした画像を「ボンボンドロップシール」風のぷっくりアイコンに加工する。
 // 処理はすべてブラウザ内（下の <script>）で行い、画像はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
-import GlossyBadge from '../components/GlossyBadge.astro';
+import Placeholder from '../components/Placeholder.astro';
+import TermsBody from '../components/TermsBody.astro';
+
+// 使い方の4ステップ。画像ができたら Placeholder を <img> に差し替える
+const steps = [
+  { text: '「画像を選ぶ」から\n好きな画像をアップ！', img: '画像を選ぶ' },
+  { text: 'プロパティでツヤや\nぷっくり度を調整', img: '調整' },
+  { text: '調整できたら\nPNGまたはSVGで保存', img: '保存' },
+  { text: '完成！SNSのアイコン\nなどに使えるよ。', img: '完成' },
+];
 ---
 
 <BaseLayout title="ぷっくりアイコンメーカー" description="画像をボンボンドロップシール風のぷっくりアイコンに加工できる無料ツール。ブラウザ内で完結します。">
   <div class="puffy">
-    <div class="page-head">
-      <GlossyBadge color="#f06aa8" motif="heart" size={48} title="" />
-      <h1>ぷっくりアイコンメーカー</h1>
-    </div>
+    <h1>ぷっくりアイコンメーカー</h1>
     <p class="lead">
       画像を選ぶと、ボンボンドロップシールのような、ぷっくりツヤツヤのアイコンに加工できます。<br />
       画像はお使いのブラウザの中だけで処理され、どこにも送信されません。
     </p>
-  
-    <div class="layout">
+
+    <section class="howto" aria-labelledby="howto-title">
+      <h2 id="howto-title" class="mark">使い方</h2>
+      <ol class="steps">
+        {steps.map((s, i) => (
+          <li>
+            <Placeholder label={s.img} />
+            <p><span class="num">{'①②③④'[i]}</span>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <div class="layout tool-frame">
       <section>
         <div class="drop" id="drop">
           <svg id="sticker" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"></svg>
@@ -94,6 +112,11 @@ import GlossyBadge from '../components/GlossyBadge.astro';
         </div>
       </section>
     </div>
+
+    <section class="terms-section" aria-labelledby="terms-title">
+      <h2 id="terms-title" class="mark">利用規約</h2>
+      <TermsBody level={3} />
+    </section>
   </div>
 
   <script>
@@ -427,6 +450,7 @@ import GlossyBadge from '../components/GlossyBadge.astro';
 
 <style>
   .puffy {
+    --frame: #d6cfca; /* 使い方とツールを囲む枠の色 */
     --bg: #fdf3f8;
     --panel: #ffffff;
     --text: #333;
@@ -435,9 +459,50 @@ import GlossyBadge from '../components/GlossyBadge.astro';
     --accent-dark: #c94785;
     --line: #f1d3e2;
   }
-  .page-head { display: flex; align-items: center; gap: 12px; }
-  .page-head h1 { margin: 0; }
-  .lead { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+  .lead { font-size: 0.95rem; line-height: 1.8; }
+
+  /* ▼ 付きの見出し */
+  .mark { font-size: 1.1rem; margin: 1.6em 0 0.6em; }
+  .mark::before { content: '▼'; margin-right: 0.2em; }
+
+  /* 使い方：スマホは2列、PCは横一列で矢印つき */
+  .howto .steps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 16px;
+    margin: 0;
+    padding: 20px;
+    list-style: none;
+    border: 2px solid var(--frame);
+    border-radius: 6px;
+  }
+  .steps li { position: relative; }
+  .steps p { margin: 8px 0 0; font-size: 0.8rem; line-height: 1.6; white-space: pre-line; }
+  .num { margin-right: 0.15em; }
+  @media (min-width: 768px) {
+    .howto .steps { grid-template-columns: repeat(4, 1fr); gap: 56px; padding: 24px 28px; }
+    /* ステップの間の ▶ 矢印。画像（正方形）の縦中央に置く */
+    .steps li:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: calc(50% - 2.4em);
+      right: -40px;
+      border-style: solid;
+      border-width: 16px 0 16px 24px;
+      border-color: transparent transparent transparent #bdb4ae;
+    }
+  }
+
+  /* ツール本体を枠で囲む */
+  .tool-frame {
+    max-width: none; /* 使い方の枠と幅をそろえる */
+    margin-top: 32px;
+    padding: 16px;
+    border: 2px solid var(--frame);
+    border-radius: 6px;
+  }
+
+  .terms-section { margin-top: 24px; font-size: 0.9rem; }
   .layout {
     display: grid;
     gap: 24px;
