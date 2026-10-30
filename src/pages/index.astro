@@ -1,15 +1,16 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Placeholder from '../components/Placeholder.astro';
+import Logo from '../assets/logo.svg';
 import { SITE_NAME, contents } from '../data/site';
 
 const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title={SITE_NAME}>
-  <!-- メインイメージ（PCのみ表示） -->
+  <!-- メインイメージ（PCのみ表示）。ロゴと同じ SVG を大きめに表示する -->
   <div class="hero">
-    <Placeholder label={'メインイメージ\n（箱っぽいの）'} />
+    <Logo class="hero-logo" role="img" aria-label={`${SITE_NAME}のロゴ（ふたの開いた箱）`} />
   </div>
 
   <!-- コンテンツタイル：スマホ2列、PC4列 -->
@@ -101,11 +102,13 @@ const base = import.meta.env.BASE_URL;
   .row :global(.row-img) { margin-top: 16px; }
 
   @media (min-width: 768px) {
+    /* メインイメージは控えめな大きさにする。数値を変えると大きさが変わる */
     .hero {
       display: block;
-      max-width: 500px;
-      margin: 0 auto 64px;
+      width: 240px;
+      margin: -8px auto 40px;
     }
+    .hero :global(.hero-logo) { display: block; width: 100%; height: auto; }
     .tiles { grid-template-columns: repeat(4, 1fr); gap: 48px; padding: 0 3%; }
     .tile { font-size: 1.2rem; }
 

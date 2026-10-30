@@ -3,6 +3,8 @@
 // スマホ：左にロゴとサイト名、右にハンバーガーメニュー
 // PC   ：サイト名を中央に大きく（メニューはフッターにある）
 import { SITE_NAME, nav } from '../data/site';
+// SVG ファイルを import すると、<Logo /> のようにコンポーネントとして使える（HTML に直接埋め込まれる）
+import Logo from '../assets/logo.svg';
 
 const base = import.meta.env.BASE_URL;
 // 末尾の / の有無で一致しなくならないよう、そろえてから比べる
@@ -15,8 +17,8 @@ const Title = here === withSlash(base) ? 'h1' : 'p';
 
 <header class="site-header">
   <a class="brand" href={base}>
-    <!-- ロゴ画像ができたら、この span を <img src="..." alt="" /> に差し替える -->
-    <span class="logo" aria-hidden="true"></span>
+    <!-- 隣にサイト名の文字があるので、ロゴは読み上げ対象から外す -->
+    <Logo class="logo" width={52} height={52} aria-hidden="true" />
     <Title class="site-title">{SITE_NAME}</Title>
   </a>
 
@@ -54,13 +56,13 @@ const Title = here === withSlash(base) ? 'h1' : 'p';
     color: inherit;
     text-decoration: none;
   }
-  .logo {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    background: var(--ph-bg);
-    flex-shrink: 0;
-  }
+  .logo { flex-shrink: 0; }
+  /*
+    ロゴは 400×400 で描かれているので、52px に縮めると線が細くかすれる。
+    ヘッダーのロゴだけ線を太くする（SVG 内の style より優先させるため !important）。
+    :global() … 線（path）は SVG ファイル由来の要素なので、スコープ付き CSS の対象外になる。そのため global で指定する
+  */
+  .brand :global(.logo path) { stroke-width: 13px !important; }
   .site-title {
     margin: 0;
     font-size: 1.7rem;
