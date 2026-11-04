@@ -60,7 +60,7 @@ const steps = [
           <label class="inline"><input type="checkbox" id="removeBg" checked /> 白背景を消す</label>
           <label class="row" id="toleranceRow">
             <span>消す白の範囲</span>
-            <input type="range" id="tolerance" min="4" max="80" step="1" value="24" />
+            <input type="range" id="tolerance" min="4" max="80" step="1" value="20" />
           </label>
         </fieldset>
   
@@ -73,13 +73,13 @@ const steps = [
           <span>フチ</span>
           <div class="inline">
             <input type="color" id="borderColor" value="#ffffff" aria-label="フチの色" />
-            <input type="range" id="border" min="0" max="24" step="1" value="12" aria-label="フチの太さ" style="flex:1" />
+            <input type="range" id="border" min="0" max="24" step="1" value="13" aria-label="フチの太さ" style="flex:1" />
           </div>
         </div>
   
         <label class="row">
           <span>フチの透明感</span>
-          <input type="range" id="clarity" min="0" max="100" step="1" value="55" />
+          <input type="range" id="clarity" min="0" max="100" step="1" value="45" />
         </label>
 
         <label class="row" id="bgRow">
@@ -89,7 +89,7 @@ const steps = [
   
         <label class="row">
           <span>ぷっくり度</span>
-          <input type="range" id="puff" min="0" max="100" step="1" value="60" />
+          <input type="range" id="puff" min="0" max="100" step="1" value="24" />
         </label>
   
         <div class="row">
@@ -143,6 +143,9 @@ const steps = [
     const DRAFT_SIZE = 280; // ドラッグなどの操作中は、軽く動くようにさらに小さく計算する
     const EXPORT_SIZE = 800;
     const CIRCLE_RADIUS = 150; // 400px 基準の丸の半径
+    // 「画像の大きさ」の初期値。丸は 1 で隙間なく覆い、輪郭は 2 で絵の長い辺が CONTOUR_SIZE になる
+    const DEFAULT_SCALE = { circle: 1, contour: 2 };
+    const CONTOUR_SIZE = 160; // 400px 基準
 
     const PRESETS: Record<string, PuffyLight & { sparkle: boolean }> = {
       soft: { x: -0.45, y: -0.8, size: 0.6, strength: 0.75, blur: 0.5, sparkle: false },
@@ -154,20 +157,21 @@ const steps = [
     const state = {
       source: null as HTMLCanvasElement | null, // 読み込んだ元画像
       cutout: null as HTMLCanvasElement | null, // 白背景を消した画像
+      cutoutBox: { x: 0, y: 0, w: 1, h: 1 }, // 白背景を消した画像の、絵がある範囲（余白を除く）
       shape: 'circle' as 'circle' | 'contour',
       removeBg: true,
-      tolerance: 24,
+      tolerance: 20,
       scale: 1,
       x: 0, // 画像中心の、キャンバス中心からのずれ（400px 基準）
       y: 0,
-      border: 12,
+      border: 13,
       borderColor: '#ffffff',
-      clarity: 55,
+      clarity: 45,
       bg: '#ffffff',
-      puff: 60,
-      light: { x: -0.45, y: -0.8, size: 0.6, strength: 1, blur: 0.04 } as PuffyLight,
+      puff: 24,
+      light: { x: -0.6, y: -0.6, size: 0.85, strength: 0.95, blur: 0.12 } as PuffyLight,
       sparkle: true,
-      preset: 'glossy',
+      preset: 'jelly',
     };
 
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -187,15 +191,17 @@ const steps = [
       const unit = size / 400;
       const center = size / 2;
       const circle = state.shape === 'circle';
-      const image = (!circle && state.removeBg ? state.cutout : state.source)!;
+      const useCutout = !circle && state.removeBg;
+      const image = (useCutout ? state.cutout : state.source)!;
+      // 白背景を消すときは余白を除いた範囲を使う。元画像の余白の量で大きさや位置が変わらないようにするため
+      const box = useCutout ? state.cutoutBox : { x: 0, y: 0, w: image.width, h: image.height };
 
-      // 大きさ=1 のとき、丸なら隙間なく覆い、輪郭なら全体が収まる倍率
       const fit = circle
-        ? (CIRCLE_RADIUS * 2) / Math.min(image.width, image.height)
-        : 290 / Math.max(image.width, image.height);
+        ? (CIRCLE_RADIUS * 2) / Math.min(box.w, box.h)
+        : CONTOUR_SIZE / DEFAULT_SCALE.contour / Math.max(box.w, box.h);
       const k = fit * state.scale * unit;
-      const w = image.width * k;
-      const h = image.height * k;
+      const w = box.w * k;
+      const h = box.h * k;
 
       if (circle) {
         c.beginPath();
@@ -205,7 +211,7 @@ const steps = [
         c.fillRect(0, 0, size, size);
       }
       c.imageSmoothingQuality = 'high';
-      c.drawImage(image, center + state.x * unit - w / 2, center + state.y * unit - h / 2, w, h);
+      c.drawImage(image, box.x, box.y, box.w, box.h, center + state.x * unit - w / 2, center + state.y * unit - h / 2, w, h);
       return c.getImageData(0, 0, size, size);
     }
 
@@ -270,11 +276,42 @@ const steps = [
       return c;
     }
 
+    /** 透明でない部分を囲む範囲を求める */
+    function opaqueBounds(data: ImageData) {
+      const { width: w, height: h } = data;
+      let minX = w;
+      let minY = h;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (data.data[(x + y * w) * 4 + 3] > 16) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      // 全部消えてしまったときは画像全体を使う
+      return maxX < 0 ? { x: 0, y: 0, w, h } : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+    }
+
     function updateCutout() {
       if (!state.source) return;
       const c = state.source.getContext('2d', { willReadFrequently: true })!;
       const data = c.getImageData(0, 0, state.source.width, state.source.height);
-      state.cutout = canvasFromImageData(removeWhiteBackground(data, state.tolerance));
+      const cut = removeWhiteBackground(data, state.tolerance);
+      state.cutout = canvasFromImageData(cut);
+      state.cutoutBox = opaqueBounds(cut);
+    }
+
+    /** 位置と大きさを、今の形の初期値に戻す */
+    function resetPlacement() {
+      state.x = 0;
+      state.y = 0;
+      state.scale = DEFAULT_SCALE[state.shape];
+      $<HTMLInputElement>('scale').value = String(state.scale);
     }
 
     function setShape(shape: typeof state.shape) {
@@ -303,13 +340,10 @@ const steps = [
       c.drawImage(img, 0, 0, source.width, source.height);
 
       state.source = source;
-      state.x = 0;
-      state.y = 0;
-      state.scale = 1;
-      $<HTMLInputElement>('scale').value = '1';
       updateCutout();
       // 白背景・透明背景の画像なら、自動で輪郭に沿わせる
       setShape(looksLikePlainBackground(c.getImageData(0, 0, source.width, source.height)) ? 'contour' : 'circle');
+      resetPlacement();
 
       placeholder.hidden = true;
       $<HTMLButtonElement>('savePng').disabled = false;
@@ -358,8 +392,7 @@ const steps = [
     document.querySelectorAll<HTMLInputElement>('input[name="shape"]').forEach((el) =>
       el.addEventListener('change', () => {
         setShape(el.value as typeof state.shape);
-        state.x = 0;
-        state.y = 0;
+        resetPlacement();
         requestRender();
       }),
     );
