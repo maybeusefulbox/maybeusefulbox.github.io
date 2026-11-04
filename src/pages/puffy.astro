@@ -36,7 +36,7 @@ const steps = [
     </section>
 
     <div class="layout tool-frame">
-      <section>
+      <section class="stage">
         <div class="drop" id="drop">
           <canvas id="sticker" width="560" height="560"></canvas>
           <p id="placeholder">ここに画像をドロップ<br />または「画像を選ぶ」から選択</p>
@@ -544,6 +544,28 @@ const steps = [
   }
   @media (min-width: 760px) {
     .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+    /* 右の設定が長くても、プレビューが画面内に残るようにする */
+    .stage { position: sticky; top: 16px; }
+  }
+  /*
+    スマホ：プレビューを画面上部に固定して、設定だけがその下をスクロールするようにする。
+    sticky は親要素の中でしか動けない。グリッドのままだと親（行）の高さがプレビュー分しかなく
+    固定されないので、スマホでは縦に積むだけの block にしている。
+  */
+  @media (max-width: 759px) {
+    .layout { display: block; }
+    .stage {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 8px 0;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+    /* 大きいままだと設定が見える場所がなくなるので、画面の高さの4割弱に収める */
+    .stage .drop { width: min(100%, 38vh); }
+    .stage .hint { margin: 4px 0 0; font-size: 0.7rem; }
+    .panel { margin-top: 12px; }
   }
 
   /* プレビュー：透明部分がわかるように市松模様を敷く */

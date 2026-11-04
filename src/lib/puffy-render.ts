@@ -317,23 +317,29 @@ export function buildGeometry(art: ImageData, border400: number, puff: number): 
   for (let i = 0; i < n; i++) outside[i] = px[i * 4 + 3] > 127 ? 0 : 1;
   const toArt = distanceTransform(outside, S, S);
   const borderPx = border400 * unit;
+  // 半径が大きいほど、絵の細かい凹凸を拾わない丸い外形になる。大きすぎるとキャラクターの形が消える
+  const roundRadius = Math.max(1, 4 * unit + borderPx * 0.45);
+  // 丸めると出っ張った部分の余白が減るので、その分を先に足しておく
+  const grow = borderPx + (borderPx > 0 ? roundRadius * 0.45 : 0);
   const blob = new Float32Array(n);
-  for (let i = 0; i < n; i++) blob[i] = toArt[i] <= borderPx ? 1 : 0;
+  for (let i = 0; i < n; i++) blob[i] = toArt[i] <= grow ? 1 : 0;
 
   // ぼかしてからくっきりさせると、角や細い隙間が丸まって、溶けた樹脂のような形になる
-  const roundRadius = Math.max(1, 3 * unit + borderPx * 0.35);
   const blurred = boxBlur(blob, S, S, roundRadius, 3);
   const coverage = new Float32Array(n);
   const edgeSharp = Math.max(2, roundRadius * 1.2);
   const inside = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
-    coverage[i] = clamp01((blurred[i] - 0.5) * edgeSharp + 0.5);
-    inside[i] = blurred[i] > 0.5 ? 1 : 0;
+    // 丸めた結果で絵が欠けないよう、絵のある部分は必ずシールの内側に含める
+    coverage[i] = Math.max(clamp01((blurred[i] - 0.5) * edgeSharp + 0.5), px[i * 4 + 3] / 255);
+    inside[i] = blurred[i] > 0.5 || px[i * 4 + 3] > 127 ? 1 : 0;
   }
 
   // 形を風船のように膨らませて高さを作る。縁だけは輪郭からの距離を使ってきれいに丸める
-  const dist = distanceTransform(inside, S, S);
-  const balloon = inflate(inside, S);
+  // 距離はピクセル単位で段になるので、少しぼかして縁のギザギザを消す
+  const dist = boxBlur(distanceTransform(inside, S, S), S, S, 1.5 * unit, 2);
+  // 高さは粗いマス目で解いているので、マス目の段が出ないようにならす
+  const balloon = boxBlur(inflate(inside, S), S, S, Math.max(2, S / 160), 2);
   const heightFactor = 0.3 + 0.75 * p;
   const rimRadius = 5 * unit;
   const raw = new Float32Array(n);
