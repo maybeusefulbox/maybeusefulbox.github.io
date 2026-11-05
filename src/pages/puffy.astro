@@ -27,8 +27,9 @@ const steps = [
       画像はお使いのブラウザの中だけで処理され、どこにも送信されません。
     </p>
 
-    <section class="howto" aria-labelledby="howto-title">
-      <h2 id="howto-title" class="mark">使い方</h2>
+    <!-- details は開閉できる標準の HTML 要素。最初から開きたいときは open 属性を付ける -->
+    <details class="fold howto">
+      <summary><h2 class="mark">使い方</h2></summary>
       <ol class="steps">
         {steps.map((s, i) => (
           <li>
@@ -37,7 +38,7 @@ const steps = [
           </li>
         ))}
       </ol>
-    </section>
+    </details>
 
     <div class="layout tool-frame">
       <section class="stage">
@@ -125,10 +126,10 @@ const steps = [
       </section>
     </div>
 
-    <section class="terms-section" aria-labelledby="terms-title">
-      <h2 id="terms-title" class="mark">利用規約</h2>
+    <details class="fold terms-section">
+      <summary><h2 class="mark">利用規約</h2></summary>
       <TermsBody level={3} />
-    </section>
+    </details>
   </div>
 
   <script>
@@ -498,9 +499,26 @@ const steps = [
   }
   .lead { font-size: 0.95rem; line-height: 1.8; }
 
-  /* ▼ 付きの見出し */
-  .mark { font-size: 1.1rem; margin: 1.6em 0 0.6em; }
-  .mark::before { content: '▼'; margin-right: 0.2em; }
+  /* 開閉できる見出し（アコーディオン）。閉じているときは ▶、開いているときは ▼ に見える */
+  .fold { margin-top: 12px; }
+  .fold > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px; /* スマホで押しやすい高さ */
+    list-style: none; /* ブラウザ標準の三角を消す */
+    cursor: pointer;
+  }
+  .fold > summary::-webkit-details-marker { display: none; } /* Safari の標準の三角を消す */
+  .fold > summary:hover .mark { color: var(--accent-dark); }
+  .fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .mark { font-size: 1.1rem; margin: 0; }
+  .mark::before {
+    content: '▼';
+    display: inline-block;
+    margin-right: 0.3em;
+    transition: transform 0.15s;
+  }
+  .fold:not([open]) .mark::before { transform: rotate(-90deg); }
 
   /* 使い方：スマホは2列、PCは横一列で矢印つき */
   .howto .steps {
@@ -540,7 +558,7 @@ const steps = [
     border-radius: 6px;
   }
 
-  .terms-section { margin-top: 24px; font-size: 0.9rem; }
+  .terms-section { font-size: 0.9rem; }
   .layout {
     display: grid;
     gap: 24px;
