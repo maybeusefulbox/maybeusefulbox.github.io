@@ -1,4 +1,6 @@
 // サイト全体の設定。サイト名やメニュー、トップのコンテンツはここを編集すれば全ページに反映される。
+import type { ImageMetadata } from 'astro';
+import tilePuffy from '../assets/tile-puffy.png';
 
 export const SITE_NAME = 'たぶん便利BOX';
 export const SITE_DESCRIPTION =
@@ -17,9 +19,10 @@ export const nav = [
  * トップページのコンテンツタイル。
  * href が null のものは「準備中」として表示される（リンクにならない）。
  * label の \n は改行になる。
+ * icon を指定すると、タイルに画像が表示される（画像は src/assets/ に置いて import する）。
  */
-export const contents: { label: string; href: string | null }[] = [
-  { label: 'ボンドロ', href: 'puffy/' },
+export const contents: { label: string; href: string | null; icon?: ImageMetadata }[] = [
+  { label: 'ボンドロ', href: 'puffy/', icon: tilePuffy },
   { label: 'よくある\nショート動画\nメーカー', href: null },
   { label: '副業体験記', href: null },
   { label: 'LINE\nスタンプ', href: null },
