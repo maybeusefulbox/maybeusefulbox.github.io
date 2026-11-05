@@ -3,15 +3,19 @@
 // アップロードした画像を「ボンボンドロップシール」風のぷっくりアイコンに加工する。
 // 処理はすべてブラウザ内（下の <script>）で行い、画像はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Placeholder from '../components/Placeholder.astro';
+import { Image } from 'astro:assets';
 import TermsBody from '../components/TermsBody.astro';
+import step1 from '../assets/puffy-step1.png';
+import step2 from '../assets/puffy-step2.png';
+import step3 from '../assets/puffy-step3.png';
+import step4 from '../assets/puffy-step4.png';
 
-// 使い方の4ステップ。画像ができたら Placeholder を <img> に差し替える
+// 使い方の4ステップ
 const steps = [
-  { text: '「画像を選ぶ」から\n好きな画像をアップ！', img: '画像を選ぶ' },
-  { text: 'プロパティでツヤや\nぷっくり度を調整', img: '調整' },
-  { text: '調整できたら\nPNGで保存', img: '保存' },
-  { text: '完成！SNSのアイコン\nなどに使えるよ。', img: '完成' },
+  { text: '「画像を選ぶ」から\n好きな画像をアップ！', img: step1, alt: '「画像を選ぶ」ボタンを押す画面' },
+  { text: 'プロパティでツヤや\nぷっくり度を調整', img: step2, alt: '犬のイラストを読み込み、スライダーで調整している画面' },
+  { text: '調整できたら\nPNGで保存', img: step3, alt: '「PNGで保存」ボタンを押す画面' },
+  { text: '完成！SNSのアイコン\nなどに使えるよ。', img: step4, alt: 'ぷっくり加工したイラストや写真の完成例' },
 ];
 ---
 
@@ -28,7 +32,7 @@ const steps = [
       <ol class="steps">
         {steps.map((s, i) => (
           <li>
-            <Placeholder label={s.img} />
+            <Image src={s.img} alt={s.alt} widths={[200, 400]} sizes="(min-width: 768px) 200px, 45vw" class="step-img" />
             <p><span class="num">{'①②③④'[i]}</span>{s.text}</p>
           </li>
         ))}
@@ -510,6 +514,7 @@ const steps = [
     border-radius: 6px;
   }
   .steps li { position: relative; }
+  .steps :global(.step-img) { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--frame); }
   .steps p { margin: 8px 0 0; font-size: 0.8rem; line-height: 1.6; white-space: pre-line; }
   .num { margin-right: 0.15em; }
   @media (min-width: 768px) {
@@ -527,7 +532,7 @@ const steps = [
   }
 
   /* ツール本体を枠で囲む */
-  .tool-frame {
+  .layout.tool-frame {
     max-width: none; /* 使い方の枠と幅をそろえる */
     margin-top: 32px;
     padding: 16px;
