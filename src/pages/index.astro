@@ -22,7 +22,8 @@ const base = import.meta.env.BASE_URL;
         {c.href ? (
           <a class:list={['tile', { 'has-icon': c.icon }]} href={base + c.href}>
             {/* 隣に文字があるので、画像は読み上げ対象から外す（alt を空にする） */}
-            {c.icon && <Image src={c.icon} alt="" widths={[220, 440]} sizes="(min-width: 768px) 220px, 45vw" class="tile-icon" />}
+            {/* 開いてすぐ見える位置にあるので、遅延読み込みにせず最初から読み込む */}
+            {c.icon && <Image src={c.icon} alt="" loading="eager" widths={[220, 440]} sizes="(min-width: 768px) 220px, 45vw" class="tile-icon" />}
             <span class="tile-label">{c.label}</span>
           </a>
         ) : (
