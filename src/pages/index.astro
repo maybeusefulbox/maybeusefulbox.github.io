@@ -20,12 +20,21 @@ const base = import.meta.env.BASE_URL;
     {contents.map((c) => (
       <li>
         {c.href ? (
-          <a class:list={['tile', { 'has-icon': c.icon }]} href={base + c.href}>
-            {/* 隣に文字があるので、画像は読み上げ対象から外す（alt を空にする） */}
-            {/* 開いてすぐ見える位置にあるので、遅延読み込みにせず最初から読み込む */}
-            {c.icon && <Image src={c.icon} alt="" loading="eager" widths={[220, 440]} sizes="(min-width: 768px) 220px, 45vw" class="tile-icon" />}
-            <span class="tile-label">{c.label}</span>
-          </a>
+          c.icon ? (
+            /* 画像ありのタイル：枠の中に画像、枠の下に名前 */
+            <a class="tile-link" href={base + c.href}>
+              <span class="tile has-icon">
+                {/* 下に文字があるので、画像は読み上げ対象から外す（alt を空にする） */}
+                {/* 開いてすぐ見える位置にあるので、遅延読み込みにせず最初から読み込む */}
+                <Image src={c.icon} alt="" loading="eager" widths={[220, 440]} sizes="(min-width: 768px) 220px, 45vw" class="tile-icon" />
+              </span>
+              <span class="tile-caption">{c.label}</span>
+            </a>
+          ) : (
+            <a class="tile" href={base + c.href}>
+              <span class="tile-label">{c.label}</span>
+            </a>
+          )
         ) : (
           <div class="tile soon">
             <span class="tile-label">{c.label}</span>
@@ -54,7 +63,7 @@ const base = import.meta.env.BASE_URL;
       <h2>利用規約</h2>
       <p>
         配布している素材やツールは、個人・商用を問わず無料でお使いいただけます。<br />
-        再配布や自作発言など、いくつかのお願いがあるので、ご利用前に一度ご確認ください。
+        ご利用前に一度下記のページもご確認ください。
       </p>
       <p><a href={`${base}terms/`}>利用規約を読む →</a></p>
     </div>
@@ -90,15 +99,26 @@ const base = import.meta.env.BASE_URL;
     transition: transform 0.15s, box-shadow 0.15s;
   }
   .tile-label { white-space: pre-line; } /* \n を改行として表示 */
-  /* 画像ありのタイル：上に画像、下に名前。画像の背景が白なので、タイルも白にして枠線で区切る */
+  /* 画像ありのタイル：枠の中は画像だけ。画像の背景が白なので、枠も白にして枠線で区切る */
+  .tile-link { display: block; color: var(--text); text-decoration: none; }
   .tile.has-icon {
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 2px;
     background: #fff;
     border: 1px solid var(--line);
   }
   .tile :global(.tile-icon) { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
-  a.tile:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(60, 40, 30, 0.15); }
+  /* 枠の下に出す名前。文字の大きさは font-size で変えられる */
+  .tile-caption {
+    display: block;
+    margin-top: 8px;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    /* 言葉の途中では折り返さず、label の ​ の位置でだけ折り返す */
+    word-break: keep-all;
+  }
+  a.tile:hover, .tile-link:hover .tile { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(60, 40, 30, 0.15); }
   .tile.soon { color: var(--ph-text); }
   .soon-tag {
     position: absolute;
