@@ -27,6 +27,9 @@ const steps = [
       画像はお使いのブラウザの中だけで処理され、どこにも送信されません。
     </p>
 
+    <!-- href="#terms" で、同じページの id="terms" の場所へ移動する（ページ内リンク） -->
+    <p class="terms-link"><a href="#terms">利用規約はこちら</a></p>
+
     <!-- details は開閉できる標準の HTML 要素。最初から開きたいときは open 属性を付ける -->
     <details class="fold howto">
       <summary><h2 class="mark">使い方</h2></summary>
@@ -126,11 +129,30 @@ const steps = [
       </section>
     </div>
 
-    <details class="fold terms-section">
+    <details class="fold terms-section" id="terms">
       <summary><h2 class="mark">利用規約</h2></summary>
       <TermsBody level={3} showPuffy />
     </details>
   </div>
+
+  <script>
+    // 「利用規約はこちら」から移動したとき、閉じている利用規約を開く。
+    // URL の末尾が #terms で開かれたとき（ページを直接開いたときや、戻る・進む）も同じように開く。
+    function openTermsIfTargeted() {
+      if (location.hash !== '#terms') return;
+      const terms = document.getElementById('terms') as HTMLDetailsElement | null;
+      if (!terms) return;
+      terms.open = true;
+      terms.scrollIntoView();
+    }
+    window.addEventListener('hashchange', openTermsIfTargeted);
+    openTermsIfTargeted();
+    // URL がすでに #terms のときは hashchange が起きないので、リンクを押したときにも開く
+    document.querySelector('.terms-link a')?.addEventListener('click', () => {
+      const terms = document.getElementById('terms') as HTMLDetailsElement | null;
+      if (terms) terms.open = true;
+    });
+  </script>
 
   <script>
     // .astro の <script> は TypeScript として書け、ビルド時にまとめられてページに読み込まれる。
@@ -500,6 +522,7 @@ const steps = [
   .lead { font-size: 0.95rem; line-height: 1.8; }
 
   /* 開閉できる見出し（アコーディオン）。閉じているときは ▶、開いているときは ▼ に見える */
+  .terms-link { margin: 8px 0 0; font-size: 0.9rem; }
   .fold { margin-top: 12px; }
   .fold > summary {
     display: flex;
