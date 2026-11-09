@@ -1,0 +1,61 @@
+---
+// LINEスタンプの紹介ページ。
+// スタンプを増やすときは、画像を src/assets/ に置いて import し、下の stamps に1行追加する。
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+import usaneko from '../assets/line-usaneko.png';
+import nomiko from '../assets/line-nomiko.webp';
+
+const stamps = [
+  {
+    title: '推し活うさねこコンビは今日も必死に生きる',
+    url: 'https://line.me/S/sticker/37735526',
+    image: usaneko,
+  },
+  {
+    title: '酒好きのみ子の飲みたい毎日',
+    url: 'https://line.me/S/sticker/37289804',
+    image: nomiko,
+  },
+];
+---
+
+<BaseLayout title="LINEスタンプ" description="オリジナルLINEスタンプを配信中です。">
+  <h1 class="page-title">オリジナルLINEスタンプ配信中！</h1>
+
+  <ul class="stamps">
+    {stamps.map((s) => (
+      <li>
+        <!-- 画像全体がLINE STOREへのリンク。target="_blank" で別のタブに開く -->
+        <a href={s.url} target="_blank" rel="noopener">
+          <Image
+            src={s.image}
+            alt={`LINEスタンプ「${s.title}」（LINE STOREで見る）`}
+            widths={[600, 905]}
+            sizes="(min-width: 768px) 600px, 100vw"
+            class="banner"
+          />
+        </a>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>
+
+<style>
+  .page-title { font-size: 1.2rem; margin: 8px 0 24px; }
+  .stamps {
+    display: grid;
+    gap: 24px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .stamps a { display: block; width: min(100%, 600px); margin: 0 auto; transition: transform 0.15s; }
+  .stamps a:hover { transform: translateY(-3px); }
+  .stamps :global(.banner) { display: block; width: 100%; height: auto; }
+
+  @media (min-width: 768px) {
+    .page-title { padding: 0 3%; }
+    .stamps { gap: 40px; }
+  }
+</style>
