@@ -1,0 +1,5 @@
+# 検索エンジンのロボットへの案内。すべてのページを見てよいことと、サイトマップの場所を伝える
+User-agent: *
+Allow: /
+
+Sitemap: https://maybeusefulbox.github.io/sitemap-index.xml

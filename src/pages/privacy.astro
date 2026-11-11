@@ -1,9 +1,10 @@
 ---
 // プライバシーポリシー。
 // アフィリエイト（ASP）の審査や、広告の表示に必要な「個人情報・Cookie の扱い」を説明するページ。
-// アクセス解析（Google アナリティクスなど）や広告サービスを使い始めたら、該当する項目を書き足す。
+// 広告サービスを使い始めたら、該当する項目を書き足す。
+// アクセス解析の説明は、src/data/site.ts の ANALYTICS.gaId を入れると自動で切り替わる（そのとき updated も更新する）。
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { SITE_NAME, OPERATOR } from '../data/site';
+import { SITE_NAME, OPERATOR, ANALYTICS } from '../data/site';
 
 const base = import.meta.env.BASE_URL;
 const established = '2026年11月11日';
@@ -44,9 +45,27 @@ const updated = '2026年11月11日';
     </p>
 
     <h2>アクセス解析について</h2>
-    <p>
-      当サイトでは、現在アクセス解析ツールは使用していません。今後使用する場合は、このページでお知らせします。
-    </p>
+    {ANALYTICS.gaId ? (
+      <>
+        <p>
+          当サイトでは、サイトの利用状況を知り、より使いやすくするために、Google が提供するアクセス解析ツール「Google アナリティクス」を使用しています。
+          Google アナリティクスは、Cookie を使ってアクセスの情報（見たページ、滞在時間、おおまかな地域、お使いの端末やブラウザの種類など）を集めます。
+          この情報は匿名で集められ、個人を特定するものではありません。
+        </p>
+        <p>
+          集められた情報は、Google のプライバシーポリシーに基づいて管理されます。
+          詳しくは「<a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener">Google のサービスを使用するサイトやアプリから収集した情報の Google による使用</a>」をご覧ください。
+        </p>
+        <p>
+          情報の収集を止めたい場合は、ブラウザの設定で Cookie を無効にするか、
+          <a href="https://tools.google.com/dlpage/gaoptout?hl=ja" target="_blank" rel="noopener">Google アナリティクス オプトアウト アドオン</a>をご利用ください。
+        </p>
+      </>
+    ) : (
+      <p>
+        当サイトでは、現在アクセス解析ツールは使用していません。今後使用する場合は、このページでお知らせします。
+      </p>
+    )}
 
     <h2>お問い合わせでいただいた情報について</h2>
     <p>

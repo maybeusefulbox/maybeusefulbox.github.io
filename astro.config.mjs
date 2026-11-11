@@ -1,5 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+// サイトマップ（全ページの一覧 sitemap-index.xml）を自動で作る。Search Console に登録して、Google にページを知らせる
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
@@ -8,6 +10,7 @@ export default defineConfig({
   // リポジトリ名を「ユーザー名.github.io」にすると、サイトはドメイン直下（/）に置かれる。
   // 別の名前のリポジトリで公開するときは '/リポジトリ名/' に変える。
   base: '/',
+  integrations: [sitemap()],
   // 移動・廃止したページ。古い URL を開いた人を新しいページへ自動で案内する
   redirects: {
     // グロッシーバッジ素材（配布終了）→ メダル風アイコンメーカー

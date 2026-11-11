@@ -2,7 +2,7 @@
 // 全ページ共通の枠。ヘッダー・本文・フッターを並べ、各ページの中身は <slot /> に入る。
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import { SITE_NAME, SITE_DESCRIPTION } from '../data/site';
+import { SITE_NAME, SITE_DESCRIPTION, ANALYTICS } from '../data/site';
 
 interface Props {
   title: string;
@@ -45,6 +45,21 @@ const imageUrl = new URL(`${base}ogp/${ogImage}`, Astro.site).href;
     <meta property="og:locale" content="ja_JP" />
     <!-- X（旧Twitter）用。summary_large_image で画像を大きく表示する -->
     <meta name="twitter:card" content="summary_large_image" />
+    <!-- Search Console の所有者確認。「このサイトは自分のもの」と Google に示す -->
+    {ANALYTICS.searchConsole && <meta name="google-site-verification" content={ANALYTICS.searchConsole} />}
+    {/* Google アナリティクス。async なので、読み込みを待たずにページが表示される。
+         開発中（npm run dev）のアクセスは数えないよう、本番ビルドのときだけ入れる */}
+    {ANALYTICS.gaId && import.meta.env.PROD && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.gaId}`}></script>
+        <script is:inline define:vars={{ gaId: ANALYTICS.gaId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', gaId);
+        </script>
+      </>
+    )}
     <!-- 丸ゴシックの Web フォント。display=swap で、読み込み前も文字は先に表示される -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

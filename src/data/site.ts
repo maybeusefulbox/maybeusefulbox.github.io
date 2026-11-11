@@ -40,6 +40,17 @@ export const OPERATOR = {
 };
 
 /**
+ * アクセス解析の設定。空欄（''）のあいだは、ページに何も出さない。
+ * ここに書き込むだけで全ページに反映され、プライバシーポリシーの文面も自動で切り替わる
+ */
+export const ANALYTICS = {
+  /** Google アナリティクスの測定 ID（G- から始まる英数字） */
+  gaId: 'G-LTS80BBSB7',
+  /** Search Console の確認コード（HTML タグ方式の content="◯◯" の◯◯の部分） */
+  searchConsole: 'AukbcOHesDPRZqyNMVnx6S9aL1ezjpVgG29HFDEwCV8',
+};
+
+/**
  * トップページのコンテンツタイル。
  * href が null のものは「準備中」として表示される（リンクにならない）。
  * label の \n は改行になる。
