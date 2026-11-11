@@ -4,6 +4,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import TermsBody from '../components/TermsBody.astro';
 
 const updated = '2026年11月11日';
+
+// 画像をお借りしているサイト（増えたらここに1行足す）
+const credits = [
+  { name: 'イラストAC', url: 'https://www.ac-illust.com/' },
+  { name: 'Unlimited', url: 'https://unlimited.prompton.io/' },
+];
 ---
 
 <BaseLayout title="利用規約" description="当サイトで配布している素材の利用規約です。">
@@ -13,4 +19,27 @@ const updated = '2026年11月11日';
   <TermsBody level={2} showLogo showFonts />
 
   <p><small>最終更新：{updated}</small></p>
+
+  <!--
+    「利用規約」と同じ大きさの見出し。
+    1ページに h1（いちばん大きな見出し）は1つにするのが基本なので、h2 にして見た目だけ h1 と同じ大きさにしている
+  -->
+  <section class="credits">
+    <h2 class="page-heading">素材提供</h2>
+    <p>本サイトは以下のサイトより一部の画像をお借りしています。</p>
+    <ul>
+      {credits.map((c) => (
+        <li>{c.name}：<a href={c.url} target="_blank" rel="noopener">{c.url}</a></li>
+      ))}
+    </ul>
+    <p class="support"><a href="https://wavebox.me/wave/8vzzn68yjwdqzxtv/" target="_blank" rel="noopener">👏良かったら応援してね！</a></p>
+  </section>
 </BaseLayout>
+
+<style>
+  .credits { margin-top: 48px; }
+  .page-heading { font-size: 1.6rem; margin: 0.4em 0 0.5em; }
+  .credits ul { margin: 0.4em 0; padding: 0; list-style: none; }
+  .credits a { word-break: break-all; } /* 長い URL がスマホで画面からはみ出さないように */
+  .support { margin-top: 1.5em; }
+</style>
