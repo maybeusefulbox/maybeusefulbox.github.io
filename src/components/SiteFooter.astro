@@ -45,9 +45,14 @@ const year = new Date().getFullYear();
   /* 応援ボタン：白い角丸の箱にロゴを入れる */
   .support { margin: 0 0 28px; }
   .support-text { margin: 0 0 6px; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em; }
+  /*
+    Wavebox のロゴの決まり（アイソレーション）：ロゴの周りに「o」の横幅以上の余白を空ける。
+    「o」の幅はロゴ全体の約10.3%なので、ロゴの幅 136px なら約14px。少し余裕を持たせて 16px にしている。
+    ロゴの幅（下の width）を変えるときは、余白もその約12%以上にする
+  */
   .support-button {
     display: inline-block;
-    padding: 8px 12px;
+    padding: 16px;
     border-radius: 8px;
     background: #fff;
     transition: transform 0.15s, box-shadow 0.15s;
