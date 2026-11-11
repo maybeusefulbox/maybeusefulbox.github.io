@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { Image } from 'astro:assets';
 import Logo from '../assets/logo.svg';
 import coffee from '../assets/coffee.webp';
@@ -70,6 +71,9 @@ const base = import.meta.env.BASE_URL;
     </div>
     <Image src={books} alt="積み重なった本のイラスト" widths={[260, 520]} sizes="260px" class="row-img books" />
   </section>
+
+  <!-- 広告（src/data/ads.ts で place: 'top' にしたものだけ表示） -->
+  <AdSlot place="top" />
 </BaseLayout>
 
 <style>

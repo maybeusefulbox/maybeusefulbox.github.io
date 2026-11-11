@@ -74,7 +74,10 @@ function addSponsored(html: string) {
   }
   .ad { max-width: 100%; text-align: center; }
   .lead { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; }
-  /* ASP のバナー画像が、スマホの画面幅からはみ出さないようにする */
-  .code :global(img) { max-width: 100%; height: auto; }
-  .code { font-size: 0.9rem; }
+  /* ASP のバナー画像が、スマホの画面幅からはみ出さないようにする。
+     vertical-align: bottom … 画像の下に、文字の行のような小さなすき間ができるのを防ぐ */
+  .code :global(img) { max-width: 100%; height: auto; vertical-align: bottom; }
+  .code { position: relative; font-size: 0.9rem; }
+  /* 成果の計測用の 1×1 の画像は、読み込みはそのままに、場所を取らないよう浮かせておく */
+  .code :global(img[width='1'][height='1']) { position: absolute; left: 0; bottom: 0; }
 </style>
