@@ -4,6 +4,7 @@
 //   シンプル … 星・ハートのバッジ。配布素材と同じ renderBadgeSvg() で描くので、見た目は素材と一致する
 //   文字入り … 円に沿った文字と中央の文字が入るバッジ。renderTextBadgeSvg() で描く
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import GlossyPill from '../../components/GlossyPill.astro';
 import type { Motif } from '../../lib/badge-svg';
 import { FONTS } from '../../lib/fonts';
@@ -199,6 +200,9 @@ const motifs: { key: Motif; name: string }[] = [
       </div>
     </section>
   </div>
+
+  <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
+  <AdSlot place="badges" />
 </BaseLayout>
 
 <style>

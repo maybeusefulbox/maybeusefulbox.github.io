@@ -3,6 +3,7 @@
 // アップロードした画像を「ボンボンドロップシール」風のぷっくりアイコンに加工する。
 // 処理はすべてブラウザ内（下の <script>）で行い、画像はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { Image } from 'astro:assets';
 import TermsBody from '../components/TermsBody.astro';
 import step1 from '../assets/puffy-step1.png';
@@ -128,6 +129,9 @@ const steps = [
         </div>
       </section>
     </div>
+
+    <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
+    <AdSlot place="puffy" />
 
     <details class="fold terms-section" id="terms" open>
       <summary><h2 class="mark">利用規約</h2></summary>

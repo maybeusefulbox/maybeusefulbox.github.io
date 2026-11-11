@@ -1,0 +1,80 @@
+---
+// アフィリエイト広告を表示する部品。<AdSlot place="badges" /> のように置くと、
+// src/data/ads.ts に登録した、その場所の広告をまとめて表示する。登録がなければ何も表示しない。
+//
+// 自動で行うこと：
+//   - 「PR」の表記を付ける（ステルスマーケティング規制で、広告であることを分かるようにする決まりがあるため）
+//   - 広告のリンク（<a>）に rel="sponsored" を足す（Google に「広告のリンク」だと伝える。検索の評価が下がるのを防ぐ）
+import { ads, type AdPlace } from '../data/ads';
+
+interface Props {
+  place: AdPlace;
+}
+
+const { place } = Astro.props;
+const items = ads.filter((a) => a.place === place && a.enabled !== false);
+
+/**
+ * <a ...> に rel="sponsored" を足す。すでに rel があるときは、その値の後ろに足す（nofollow なども残す）。
+ * コードのほかの部分（リンク先・画像・計測用の画像など）は変えない
+ */
+function addSponsored(html: string) {
+  return html.replace(/<a\b[^>]*>/gi, (tag) => {
+    const rel = tag.match(/\srel\s*=\s*(["'])(.*?)\1/i);
+    if (rel) {
+      if (/\bsponsored\b/i.test(rel[2])) return tag;
+      return tag.replace(rel[0], ` rel=${rel[1]}${rel[2]} sponsored${rel[1]}`);
+    }
+    return tag.replace(/^<a\b/i, '<a rel="sponsored"');
+  });
+}
+---
+
+{items.length > 0 && (
+  <aside class="ad-slot" aria-label="広告">
+    <span class="pr">PR</span>
+    <div class="ad-list">
+      {items.map((ad) => (
+        <div class="ad">
+          {ad.lead && <p class="lead">{ad.lead}</p>}
+          <div class="code" set:html={addSponsored(ad.html)} />
+        </div>
+      ))}
+    </div>
+  </aside>
+)}
+
+<style>
+  .ad-slot {
+    position: relative;
+    margin: 32px 0 0;
+    padding: 20px 16px 16px;
+    border: 1px dashed var(--line, #ddd);
+    border-radius: 8px;
+  }
+  /* 枠の左上に「PR」の札を付ける */
+  .pr {
+    position: absolute;
+    top: -0.7em;
+    left: 12px;
+    padding: 0 8px;
+    border-radius: 4px;
+    background: #8a7f78;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4em;
+  }
+  .ad-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 24px;
+  }
+  .ad { max-width: 100%; text-align: center; }
+  .lead { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; }
+  /* ASP のバナー画像が、スマホの画面幅からはみ出さないようにする */
+  .code :global(img) { max-width: 100%; height: auto; }
+  .code { font-size: 0.9rem; }
+</style>

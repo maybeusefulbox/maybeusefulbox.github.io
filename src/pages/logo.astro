@@ -4,6 +4,7 @@
 // 文字は opentype.js で図形（パス）にして描くので、保存した SVG はフォントがない環境でも同じ見た目になる。
 // 処理はすべてブラウザ内（下の <script>）で行い、入力した文字はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
 import TermsBody from '../components/TermsBody.astro';
 import { FONTS } from '../lib/fonts';
 import { TEXT_LOGO_PRESETS } from '../data/text-logo-presets';
@@ -158,6 +159,9 @@ const DEFAULT_TEXT = 'たぶん便利BOX';
         </div>
       </section>
     </div>
+
+    <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
+    <AdSlot place="logo" />
 
     <details class="fold terms-section" id="terms" open>
       <summary><h2 class="mark">利用規約</h2></summary>
