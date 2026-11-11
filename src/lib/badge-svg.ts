@@ -66,11 +66,11 @@ export function baseGradientDef(id: string, color: string, lightAmount = 0.45, d
     </radialGradient>`;
 }
 
-/** 外周だけを暗くする内側の影の <radialGradient> */
-export function shadeGradientDef(id: string) {
+/** 外周だけを暗くする内側の影の <radialGradient>。opacity はいちばん外側の暗さ */
+export function shadeGradientDef(id: string, opacity = 0.35) {
   return `<radialGradient id="${id}" cx="50%" cy="50%" r="50%">
       <stop offset="78%" stop-color="#000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="${opacity}"/>
     </radialGradient>`;
 }
 

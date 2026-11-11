@@ -5,8 +5,9 @@
 //   2. 帯               … 濃い色の輪っか。ここに文字が円に沿って入る
 //   3. 内側の丸         … 帯より明るい色。中央に大きな文字を置く（境目に細い縁を付ける）
 //   4. 内側の影         … 外周だけ暗くして立体感を出す
-//   5. 文字             … 帯の文字（上・下）と中央の文字
+//   5. 中央の文字
 //   6. ツヤ             … 既存のバッジと同じハイライト楕円
+//   7. 帯の文字（上・下）… ツヤの白と重なると読みにくいので、ツヤより上に描く
 //
 // 文字はフォントのデータから「図形（パス）」に変換して描く。
 // <text> を使わないので、フォントを持っていない環境で SVG を開いても同じ見た目になる。
@@ -22,7 +23,8 @@ import {
 } from './badge-svg';
 import { lighten, darken, luminance } from './color';
 
-export type TextColorMode = 'auto' | 'white' | 'dark';
+/** auto：背景の明るさで白か濃い色を自動で選ぶ。neon-◯◯：蛍光色（NEON_COLORS を参照） */
+export type TextColorMode = 'auto' | 'white' | 'dark' | 'neon-pink' | 'neon-yellow' | 'neon-green' | 'neon-blue';
 
 export interface TextBadgeOptions {
   color: string;
@@ -321,21 +323,60 @@ function centerText(text: string, font: Font, fallback: Font | undefined, missin
 
 // ---------- 色 ----------
 
-/** 文字の色と、その下に敷く影の色 */
-function textColors(mode: TextColorMode, background: string, base: string) {
-  const darkText = darken(base, 0.62);
-  const useWhite = mode === 'white' || (mode === 'auto' && luminance(background) < 0.42);
-  return useWhite
-    ? { fill: '#fff', shadow: darken(background, 0.45), shadowOpacity: 0.55, dy: 0.7 }
-    : // 濃い文字は、下に白い影を敷くと刻印のように見える
-      { fill: darkText, shadow: '#fff', shadowOpacity: 0.45, dy: 0.6 };
+/** 蛍光色の文字の色。キーは textColor に指定する値 */
+export const NEON_COLORS: Record<string, { name: string; hex: string }> = {
+  'neon-pink': { name: '蛍光ピンク', hex: '#ff2d95' },
+  'neon-yellow': { name: '蛍光イエロー', hex: '#ffea00' },
+  'neon-green': { name: '蛍光グリーン', hex: '#3dff5a' },
+  'neon-blue': { name: '蛍光ブルー', hex: '#19d9ff' },
+};
+
+interface TextStyle {
+  fill: string;
+  /** 文字の下に少しずらして敷く影 */
+  shadow?: { color: string; opacity: number; dy: number };
+  /** 縁取り。外側（太いもの）から順に描く */
+  outlines: { color: string; width: number }[];
 }
 
-function textLayer(d: string, c: ReturnType<typeof textColors>) {
+/** 文字の色・影・縁取りを決める */
+function textStyle(mode: TextColorMode, background: string, base: string): TextStyle {
+  const neon = NEON_COLORS[mode];
+  if (neon) {
+    // コンサートのうちわ風：蛍光色の文字に「濃い色＋白」の二重の縁取り。
+    // 縁取りがあるので、ツヤの白と重なっても文字の形がはっきり見える
+    return {
+      fill: neon.hex,
+      outlines: [
+        { color: darken(base, 0.55), width: 2.6 },
+        { color: '#fff', width: 1.5 },
+      ],
+    };
+  }
+  const useWhite = mode === 'white' || (mode === 'auto' && luminance(background) < 0.42);
+  if (useWhite) {
+    // 白い文字には細い濃い色の縁を付けて、ツヤの白と重なっても読めるようにする
+    return {
+      fill: '#fff',
+      shadow: { color: darken(background, 0.45), opacity: 0.55, dy: 0.7 },
+      outlines: [{ color: darken(background, 0.3), width: 0.7 }],
+    };
+  }
+  // 濃い文字は、下に白い影を敷くと刻印のように見える
+  return { fill: darken(base, 0.62), shadow: { color: '#fff', opacity: 0.45, dy: 0.6 }, outlines: [] };
+}
+
+function textLayer(d: string, s: TextStyle) {
   if (!d) return '';
-  return `
-  <path d="${d}" fill="${c.shadow}" opacity="${c.shadowOpacity}" transform="translate(0 ${c.dy})"/>
-  <path d="${d}" fill="${c.fill}"/>`;
+  // 縁取り：同じ形を太い線で描いてから、上に文字を重ねる（線の角は丸くして、角がとがらないようにする）
+  const outlines = s.outlines
+    .map((o) => `\n  <path d="${d}" fill="none" stroke="${o.color}" stroke-width="${o.width}" stroke-linejoin="round"/>`)
+    .join('');
+  const shadow = s.shadow
+    ? `\n  <path d="${d}" fill="${s.shadow.color}" opacity="${s.shadow.opacity}" transform="translate(0 ${s.shadow.dy})"/>`
+    : '';
+  return `${shadow}${outlines}
+  <path d="${d}" fill="${s.fill}"/>`;
 }
 
 // ---------- 組み立て ----------
@@ -345,9 +386,10 @@ export function renderTextBadgeSvg(o: TextBadgeOptions): TextBadgeResult {
   const prefix = o.idPrefix ?? 'tb';
   const id = { band: `${prefix}-band`, inner: `${prefix}-inner`, shade: `${prefix}-shade`, shine: `${prefix}-shine` };
 
-  const bandColor = darken(o.color, 0.15);
+  // 帯は元の色をほんの少しだけ暗く、内側の丸は明るくする。数値を大きくすると差が強くなる
+  const bandColor = darken(o.color, 0.05);
   const innerColor = lighten(o.color, 0.2);
-  const rim = darken(o.color, 0.4);
+  const rim = darken(o.color, 0.3);
 
   const missing = new Set<string>();
   const top = o.top.trim();
@@ -356,8 +398,8 @@ export function renderTextBadgeSvg(o: TextBadgeOptions): TextBadgeResult {
   const arcBottom = arcText(bottom, 'bottom', ARC_MAX_BOTH.bottom, o.font, o.fallback, missing);
   const center = centerText(o.center.trim(), o.font, o.fallback, missing);
 
-  const bandText = textColors(o.textColor, bandColor, o.color);
-  const centerColors = textColors(o.textColor, innerColor, o.color);
+  const bandText = textStyle(o.textColor, bandColor, o.color);
+  const centerColors = textStyle(o.textColor, innerColor, o.color);
 
   // 上下両方に文字があるときは、左右（3時と9時の位置）に小さな丸を置いて区切る
   const dots =
@@ -373,18 +415,18 @@ export function renderTextBadgeSvg(o: TextBadgeOptions): TextBadgeResult {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${sizeAttrs} role="img" aria-label="${escapeXml(title)}">
   <title>${escapeXml(title)}</title>
   <defs>
-    ${baseGradientDef(id.band, bandColor, 0.3, 0.2)}
+    ${baseGradientDef(id.band, bandColor, 0.35, 0.12)}
     ${baseGradientDef(id.inner, innerColor, 0.45, 0.12)}
-    ${shadeGradientDef(id.shade)}
+    ${shadeGradientDef(id.shade, 0.18)}
     ${shineGradientDef(id.shine, hl.opacity)}
   </defs>
   <circle cx="${C}" cy="${C}" r="${R_RIM}" fill="${rim}"/>
   <circle cx="${C}" cy="${C}" r="${R_BAND}" fill="url(#${id.band})"/>
   <circle cx="${C}" cy="${C}" r="${R_RING}" fill="${rim}"/>
   <circle cx="${C}" cy="${C}" r="${R_INNER}" fill="url(#${id.inner})"/>
-  <circle cx="${C}" cy="${C}" r="${R_BAND}" fill="url(#${id.shade})"/>${textLayer(arcTop.d + arcBottom.d, bandText)}
-  ${dots}${textLayer(center.d, centerColors)}
-  ${highlightEllipse(hl, id.shine)}
+  <circle cx="${C}" cy="${C}" r="${R_BAND}" fill="url(#${id.shade})"/>${textLayer(center.d, centerColors)}
+  ${highlightEllipse(hl, id.shine)}${textLayer(arcTop.d + arcBottom.d, bandText)}
+  ${dots}
 </svg>
 `;
 

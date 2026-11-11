@@ -8,6 +8,7 @@ import GlossyPill from '../../components/GlossyPill.astro';
 import { motifs } from '../../data/badges';
 import { BADGE_FONTS } from '../../lib/badge-fonts';
 import { TEXT_BADGE_PRESETS } from '../../data/text-badge-presets';
+import { NEON_COLORS } from '../../lib/text-badge-svg';
 
 const base = import.meta.env.BASE_URL;
 
@@ -78,6 +79,14 @@ const first = TEXT_BADGE_PRESETS[0];
             <button type="button" class="chip" data-textcolor="auto">自動</button>
             <button type="button" class="chip" data-textcolor="white">白</button>
             <button type="button" class="chip" data-textcolor="dark">濃い色</button>
+          </div>
+          <!-- 蛍光色：コンサートのうちわのような、縁取り付きの文字になる -->
+          <div class="inline">
+            {Object.entries(NEON_COLORS).map(([key, n]) => (
+              <button type="button" class="chip neon" data-textcolor={key}>
+                <span class="dot" style={`background:${n.hex}`}></span>{n.name}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -266,6 +275,8 @@ const first = TEXT_BADGE_PRESETS[0];
     cursor: pointer;
   }
   .chip[aria-pressed='true'] { background: #333a4d; border-color: #333a4d; color: #fff; }
+  .chip.neon { display: inline-flex; align-items: center; gap: 5px; }
+  .chip .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25); }
 
   details summary { cursor: pointer; font-size: 0.85rem; color: #2a6fc0; }
   details[open] { display: grid; gap: 8px; }
