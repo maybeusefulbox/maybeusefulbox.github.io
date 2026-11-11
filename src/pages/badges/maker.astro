@@ -67,7 +67,29 @@ const first = TEXT_BADGE_PRESETS[0];
           <span class="label">下の文字 <span class="note">（空欄でもOK）</span></span>
           <input type="text" id="bottomText" maxlength="20" value={first.bottom} autocomplete="off" />
         </label>
-        <label class="row">
+        <div class="row">
+          <span class="label">中央</span>
+          <div class="inline">
+            <button type="button" class="chip" data-center="text">文字</button>
+            <button type="button" class="chip" data-center="image">画像</button>
+          </div>
+        </div>
+
+        <!-- 中央を「画像」にしたときだけ表示する設定 -->
+        <div class="image-settings" id="imageSettings" hidden>
+          <!-- accept：選べるファイルの種類を画像に絞る -->
+          <label class="file-button">
+            <input type="file" id="imageFile" accept="image/*" />
+            <span>画像を選ぶ</span>
+          </label>
+          <p class="note">写真などが丸い形に切り抜かれて入ります。画像はお使いのブラウザの中だけで処理されます。</p>
+          <label class="row"><span>大きさ</span><input type="range" id="imgZoom" min="1" max="3" step="0.01" value="1" /></label>
+          <label class="row"><span>横位置</span><input type="range" id="imgX" min="-1" max="1" step="0.01" value="0" /></label>
+          <label class="row"><span>縦位置</span><input type="range" id="imgY" min="-1" max="1" step="0.01" value="0" /></label>
+          <label class="inline"><input type="checkbox" id="overlayText" /> 画像の上に中央の文字も重ねる</label>
+        </div>
+
+        <label class="row" id="centerTextRow">
           <span class="label">中央の文字 <span class="note">（2〜3文字がおすすめ）</span></span>
           <input type="text" id="centerText" maxlength="8" value={first.center} autocomplete="off" />
         </label>
@@ -234,6 +256,26 @@ const first = TEXT_BADGE_PRESETS[0];
     gap: 18px;
   }
   .text-settings { display: grid; gap: 14px; }
+  .image-settings {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f6f8fc;
+  }
+  .image-settings .row span { font-size: 0.8rem; }
+  /* ファイル選択の標準の見た目は環境ごとに違うので、input を隠してボタン風の見た目を付ける */
+  .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .file-button span {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #333a4d;
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .file-button input:focus-visible + span { outline: 2px solid #3a8ee6; outline-offset: 2px; }
   /* [hidden] は display の指定で上書きされてしまうので、ここでも隠す */
   [hidden] { display: none !important; }
   .row { display: grid; gap: 6px; }
@@ -313,7 +355,22 @@ const first = TEXT_BADGE_PRESETS[0];
     center: first.center,
     textColor: first.textColor as TextColorMode,
     font: first.font,
+    // 中央：文字か画像か
+    centerMode: 'text' as 'text' | 'image',
+    overlay: false, // 画像の上に中央の文字も重ねるか
+    image: null as { href: string; width: number; height: number } | null,
+    zoom: 1,
+    imgX: 0,
+    imgY: 0,
   };
+
+  /** 中央に描く文字。画像を使っていて、文字を重ねない設定なら空にする */
+  function centerTextNow() {
+    return state.centerMode === 'text' || state.overlay ? state.center : '';
+  }
+  function allTextNow() {
+    return state.top + state.bottom + centerTextNow();
+  }
 
   // 読み込み済みのフォント（保存のときにもこれを使う）
   let font: Font | undefined;
@@ -348,11 +405,15 @@ const first = TEXT_BADGE_PRESETS[0];
       color: state.color,
       top: state.top,
       bottom: state.bottom,
-      center: state.center,
+      center: centerTextNow(),
       textColor: state.textColor,
       font,
       fallback,
       highlight: state.hl,
+      image:
+        state.centerMode === 'image' && state.image
+          ? { ...state.image, zoom: state.zoom, x: state.imgX, y: state.imgY }
+          : undefined,
       size,
       idPrefix: 'maker',
     });
@@ -363,6 +424,7 @@ const first = TEXT_BADGE_PRESETS[0];
   /** 使えない文字や、長すぎる文字があるときに知らせる */
   function showNotice(missing: string[], tooLong: { top: boolean; bottom: boolean; center: boolean }) {
     const msgs: string[] = [];
+    if (state.centerMode === 'image' && !state.image) msgs.push('「画像を選ぶ」から、中央に入れる画像を選んでください。');
     if (missing.length) msgs.push(`使えない文字があります：${missing.join(' ')}（フォントに入っていないため表示されません）`);
     const long = [tooLong.top && '上', tooLong.bottom && '下', tooLong.center && '中央'].filter(Boolean);
     if (long.length) msgs.push(`${long.join('・')}の文字が長いため、小さく表示されています。`);
@@ -374,7 +436,7 @@ const first = TEXT_BADGE_PRESETS[0];
   let loadSeq = 0;
   async function ensureFonts() {
     const seq = ++loadSeq;
-    const allText = state.top + state.bottom + state.center;
+    const allText = allTextNow();
     loading.hidden = false;
     try {
       const main = await loadFont(state.font);
@@ -396,7 +458,7 @@ const first = TEXT_BADGE_PRESETS[0];
   function render() {
     // 文字入りで、まだフォントがないとき・必要な代わりのフォントがないときは、読み込んでから描き直す
     if (state.mode === 'text') {
-      const allText = state.top + state.bottom + state.center;
+      const allText = allTextNow();
       if (!font || (needsFallback(font, allText) && !fallback)) {
         if (loading.hidden) ensureFonts();
         if (!font) return;
@@ -417,6 +479,9 @@ const first = TEXT_BADGE_PRESETS[0];
     pressed('[data-mode]', 'mode', state.mode);
     pressed('[data-tpreset]', 'tpreset', state.tpreset);
     pressed('[data-textcolor]', 'textcolor', state.textColor);
+    pressed('[data-center]', 'center', state.centerMode);
+    $('imageSettings').hidden = state.centerMode !== 'image';
+    $('centerTextRow').hidden = state.centerMode === 'image' && !state.overlay;
     hlInputs.forEach((el) => (el.value = String(state.hl[el.dataset.hl as keyof Highlight])));
   }
 
@@ -465,6 +530,69 @@ const first = TEXT_BADGE_PRESETS[0];
     }),
   );
 
+  // ---------- 中央の画像 ----------
+
+  document.querySelectorAll<HTMLButtonElement>('[data-center]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.centerMode = b.dataset.center as 'text' | 'image';
+      state.tpreset = '';
+      render();
+    }),
+  );
+
+  // SVG の中に画像をそのまま埋め込むので、大きな写真はこの大きさ（px）まで縮めてから使う。
+  // 縮めないと、スマホの写真では SVG が数MBになってしまうため
+  const IMAGE_MAX = 600;
+
+  $<HTMLInputElement>('imageFile').addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      // createImageBitmap：画像ファイルを、canvas に描ける形に読み込む（スマホ写真の向きも直してくれる）
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, IMAGE_MAX / Math.max(bmp.width, bmp.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bmp.width * scale);
+      canvas.height = Math.round(bmp.height * scale);
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      // 透明な部分がある画像だけ PNG（透明を保てるが重い）、それ以外は JPEG（軽い）で埋め込む。
+      // getImageData で全ピクセルを調べ、4つ目の値（不透明度）が 255 未満のものがあれば透明部分あり
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let hasAlpha = false;
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 255) {
+          hasAlpha = true;
+          break;
+        }
+      }
+      const href = hasAlpha ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.9);
+      state.image = { href, width: canvas.width, height: canvas.height };
+      state.zoom = 1;
+      state.imgX = 0;
+      state.imgY = 0;
+      for (const [id, v] of [['imgZoom', 1], ['imgX', 0], ['imgY', 0]] as const) $<HTMLInputElement>(id).value = String(v);
+      render();
+    } catch {
+      notice.textContent = 'この画像は読み込めませんでした。JPEG や PNG の画像でお試しください。';
+      notice.hidden = false;
+    }
+  });
+
+  for (const [id, key] of [['imgZoom', 'zoom'], ['imgX', 'imgX'], ['imgY', 'imgY']] as const) {
+    const el = $<HTMLInputElement>(id);
+    el.addEventListener('input', () => {
+      state[key] = Number(el.value);
+      render();
+    });
+  }
+
+  $<HTMLInputElement>('overlayText').addEventListener('change', (e) => {
+    state.overlay = (e.target as HTMLInputElement).checked;
+    render();
+  });
+
   // 文字入りの見本：色・文字・フォントをまとめて切り替える
   document.querySelectorAll<HTMLButtonElement>('[data-tpreset]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -477,6 +605,7 @@ const first = TEXT_BADGE_PRESETS[0];
         center: p.center,
         textColor: p.textColor,
         font: p.font,
+        centerMode: 'text', // 見本は中央が文字なので、文字に戻す
       });
       topInput.value = p.top;
       bottomInput.value = p.bottom;

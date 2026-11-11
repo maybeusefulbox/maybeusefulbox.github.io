@@ -37,9 +37,24 @@ export interface TextBadgeOptions {
   /** 選んだフォントにない文字を描くフォント（読み込んでいなければ undefined） */
   fallback?: Font;
   highlight?: Partial<Highlight>;
+  /** 内側の丸いっぱいに敷く画像（なければ色だけ） */
+  image?: CenterImage;
   size?: number;
   title?: string;
   idPrefix?: string;
+}
+
+export interface CenterImage {
+  /** 画像のデータ（data: から始まる文字列）。SVG の中に埋め込まれる */
+  href: string;
+  /** 画像の元の幅・高さ（px） */
+  width: number;
+  height: number;
+  /** 拡大率。1 で、丸がちょうど画像の短い辺で埋まる */
+  zoom: number;
+  /** 位置。-1〜1。0 が真ん中で、丸からはみ出している範囲の中で動かす */
+  x: number;
+  y: number;
 }
 
 export interface TextBadgeResult {
@@ -379,12 +394,44 @@ function textLayer(d: string, s: TextStyle) {
   <path d="${d}" fill="${s.fill}"/>`;
 }
 
+// ---------- 中央の画像 ----------
+
+/**
+ * 画像を内側の丸の形に切り抜いて敷く。
+ * clipPath（切り抜きの型）に丸を指定すると、丸の外にはみ出した部分は表示されない。
+ * 上に内側向きの薄い影を重ねて、缶バッジのように丸のふちを少し沈ませる
+ */
+function imageLayer(img: CenterImage, clipId: string, edgeId: string) {
+  const D = R_INNER * 2;
+  // 短い辺が丸の直径になる大きさ × 拡大率
+  const scale = (D / Math.min(img.width, img.height)) * img.zoom;
+  const w = img.width * scale;
+  const h = img.height * scale;
+  // はみ出している量の範囲で位置を動かす（はみ出しがなければ動かない）
+  const x = C - w / 2 + img.x * Math.max(0, (w - D) / 2);
+  const y = C - h / 2 + img.y * Math.max(0, (h - D) / 2);
+  const n = (v: number) => Math.round(v * 100) / 100;
+  // href と xlink:href の両方を書く：古いグラフィックソフトは xlink:href しか読めないため
+  return `
+  <g clip-path="url(#${clipId})">
+    <image href="${img.href}" xlink:href="${img.href}" x="${n(x)}" y="${n(y)}" width="${n(w)}" height="${n(h)}" preserveAspectRatio="none"/>
+    <circle cx="${C}" cy="${C}" r="${R_INNER}" fill="url(#${edgeId})"/>
+  </g>`;
+}
+
 // ---------- 組み立て ----------
 
 export function renderTextBadgeSvg(o: TextBadgeOptions): TextBadgeResult {
   const hl = { ...DEFAULT_HIGHLIGHT, ...o.highlight };
   const prefix = o.idPrefix ?? 'tb';
-  const id = { band: `${prefix}-band`, inner: `${prefix}-inner`, shade: `${prefix}-shade`, shine: `${prefix}-shine` };
+  const id = {
+    band: `${prefix}-band`,
+    inner: `${prefix}-inner`,
+    shade: `${prefix}-shade`,
+    shine: `${prefix}-shine`,
+    clip: `${prefix}-clip`,
+    edge: `${prefix}-edge`,
+  };
 
   // 帯は元の色をほんの少しだけ暗く、内側の丸は明るくする。数値を大きくすると差が強くなる
   const bandColor = darken(o.color, 0.05);
@@ -412,18 +459,29 @@ export function renderTextBadgeSvg(o: TextBadgeOptions): TextBadgeResult {
   const sizeAttrs = o.size ? ` width="${o.size}" height="${o.size}"` : '';
   const title = o.title ?? ([top, o.center.trim(), bottom].filter(Boolean).join(' ') || 'バッジ');
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${sizeAttrs} role="img" aria-label="${escapeXml(title)}">
+  // 画像を使うときだけ、切り抜きの型と、ふちを沈ませる影を用意する
+  const imageDefs = o.image
+    ? `
+    <clipPath id="${id.clip}"><circle cx="${C}" cy="${C}" r="${R_INNER}"/></clipPath>
+    <radialGradient id="${id.edge}" cx="50%" cy="50%" r="50%">
+      <stop offset="82%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.28"/>
+    </radialGradient>`
+    : '';
+  const xlinkNs = o.image ? ' xmlns:xlink="http://www.w3.org/1999/xlink"' : '';
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg"${xlinkNs} viewBox="0 0 100 100"${sizeAttrs} role="img" aria-label="${escapeXml(title)}">
   <title>${escapeXml(title)}</title>
   <defs>
     ${baseGradientDef(id.band, bandColor, 0.35, 0.12)}
     ${baseGradientDef(id.inner, innerColor, 0.45, 0.12)}
     ${shadeGradientDef(id.shade, 0.18)}
-    ${shineGradientDef(id.shine, hl.opacity)}
+    ${shineGradientDef(id.shine, hl.opacity)}${imageDefs}
   </defs>
   <circle cx="${C}" cy="${C}" r="${R_RIM}" fill="${rim}"/>
   <circle cx="${C}" cy="${C}" r="${R_BAND}" fill="url(#${id.band})"/>
   <circle cx="${C}" cy="${C}" r="${R_RING}" fill="${rim}"/>
-  <circle cx="${C}" cy="${C}" r="${R_INNER}" fill="url(#${id.inner})"/>
+  <circle cx="${C}" cy="${C}" r="${R_INNER}" fill="url(#${id.inner})"/>${o.image ? imageLayer(o.image, id.clip, id.edge) : ''}
   <circle cx="${C}" cy="${C}" r="${R_BAND}" fill="url(#${id.shade})"/>${textLayer(center.d, centerColors)}
   ${highlightEllipse(hl, id.shine)}${textLayer(arcTop.d + arcBottom.d, bandText)}
   ${dots}
