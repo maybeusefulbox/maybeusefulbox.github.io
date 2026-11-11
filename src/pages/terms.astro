@@ -31,15 +31,11 @@ const credits = [
       {credits.map((c) => (
         <li>{c.name}：<a href={c.url} target="_blank" rel="noopener">{c.url}</a></li>
       ))}
-    </ul>
-    <p class="support"><a href="https://wavebox.me/wave/8vzzn68yjwdqzxtv/" target="_blank" rel="noopener">👏良かったら応援してね！</a></p>
-  </section>
+    </ul>  </section>
 </BaseLayout>
 
 <style>
   .credits { margin-top: 48px; }
   .page-heading { font-size: 1.6rem; margin: 0.4em 0 0.5em; }
   .credits ul { margin: 0.4em 0; padding: 0; list-style: none; }
-  .credits a { word-break: break-all; } /* 長い URL がスマホで画面からはみ出さないように */
-  .support { margin-top: 1.5em; }
-</style>
+  .credits a { word-break: break-all; } /* 長い URL がスマホで画面からはみ出さないように */</style>

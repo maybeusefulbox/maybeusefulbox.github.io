@@ -1,12 +1,23 @@
 ---
+import { Image } from 'astro:assets';
 import { SITE_NAME, nav } from '../data/site';
+import wavebox from '../assets/wavebox.png';
 
+// 応援ページ（Wavebox）の URL
+const WAVEBOX_URL = 'https://wavebox.me/wave/8vzzn68yjwdqzxtv/';
 const base = import.meta.env.BASE_URL;
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
   <div class="inner">
+    <!-- 応援（Wavebox）。全ページのフッターに常に出す -->
+    <div class="support">
+      <p class="support-text">＼役に立ったら応援してね！／</p>
+      <a class="support-button" href={WAVEBOX_URL} target="_blank" rel="noopener">
+        <Image src={wavebox} alt="Wavebox で応援する" widths={[150, 300]} sizes="150px" class="support-logo" />
+      </a>
+    </div>
     <p class="footer-title">{SITE_NAME}</p>
     <nav aria-label="フッターメニュー">
       <ul>
@@ -31,6 +42,18 @@ const year = new Date().getFullYear();
     padding: 40px 16px 56px;
     text-align: center;
   }
+  /* 応援ボタン：白い角丸の箱にロゴを入れる */
+  .support { margin: 0 0 28px; }
+  .support-text { margin: 0 0 6px; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em; }
+  .support-button {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #fff;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .support-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+  .support :global(.support-logo) { display: block; width: 136px; height: auto; }
   .footer-title { margin: 0 0 16px; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; }
   ul {
     display: flex;
