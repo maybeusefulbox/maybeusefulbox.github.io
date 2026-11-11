@@ -24,6 +24,18 @@ export function lighten(hex: string, amount: number): string {
   return rgbToHex(mix(hexToRgb(hex), [255, 255, 255], amount));
 }
 
+/**
+ * 色の明るさ（0＝黒〜1＝白）。人の目は緑を明るく、青を暗く感じるので、その感じ方に合わせて重みを付けている。
+ * 文字の色を「白」と「濃い色」のどちらにすると読みやすいかの判定に使う
+ */
+export function luminance(hex: string): number {
+  const lin = hexToRgb(hex).map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+
 /** 黒を混ぜて暗くする */
 export function darken(hex: string, amount: number): string {
   return rgbToHex(mix(hexToRgb(hex), [0, 0, 0], amount));

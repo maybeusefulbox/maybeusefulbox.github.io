@@ -11,7 +11,7 @@ export const nav = [
   { path: '', label: 'トップ' },
   { path: 'puffy/', label: 'ボンドロ風画像メーカー' },
   { path: 'badges/', label: 'グロッシーバッジ素材' },
-  { path: 'badges/maker/', label: 'バッジの色変更ツール' },
+  { path: 'badges/maker/', label: 'グロッシーバッジメーカー' },
   { path: 'line/', label: 'LINEスタンプ' },
   { path: 'terms/', label: '利用規約' },
 ];

@@ -6,10 +6,15 @@ interface Props {
   level?: 2 | 3;
   /** 「ボンドロ風画像メーカーについて」の項目を表示するか（ツールのページ用） */
   showPuffy?: boolean;
+  /** 「使用フォント」の項目を表示するか（利用規約ページ用） */
+  showFonts?: boolean;
 }
 
-const { level = 3, showPuffy = false } = Astro.props;
+import { BADGE_FONTS } from '../lib/badge-fonts';
+
+const { level = 3, showPuffy = false, showFonts = false } = Astro.props;
 const H = `h${level}` as 'h2' | 'h3';
+const base = import.meta.env.BASE_URL;
 ---
 
 <div class="terms-body">
@@ -35,6 +40,19 @@ const H = `h${level}` as 'h2' | 'h3';
         <li>アップロードした画像は、お使いのブラウザの中だけで処理され、当サイトのサーバーには送信されません。</li>
         <li>加工に使う画像は、ご自身が権利を持っているもの、または利用を許可されているものに限ります。それ以外の画像については自己責任でご利用ください。</li>
       </ul>
+    </>
+  )}
+
+  {showFonts && (
+    <>
+      <H>■使用フォント</H>
+      <p>グロッシーバッジメーカーでは、以下のフォントを使用しています。いずれも SIL Open Font License 1.1 のもとで公開されているフォントです。</p>
+      <ul>
+        {BADGE_FONTS.map((f) => (
+          <li>・{f.credit}（<a href={`${base}fonts/${f.key}-OFL.txt`}>ライセンス</a>）</li>
+        ))}
+      </ul>
+      <p>ツールで作ったバッジの画像は、フォントのライセンスを気にせずお使いいただけます（文字は図形に変換して保存されます）。</p>
     </>
   )}
 

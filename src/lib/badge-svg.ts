@@ -49,8 +49,46 @@ const MOTIF_PATHS: Record<Motif, string | null> = {
   none: null,
 };
 
+/** ツヤ（ハイライト楕円）の位置・大きさ・濃さ。数値は viewBox（0〜100）上の値 */
+export type Highlight = { cx: number; cy: number; rx: number; ry: number; opacity: number };
+
+export const DEFAULT_HIGHLIGHT: Highlight = { cx: 50, cy: 30, rx: 32, ry: 19, opacity: 0.9 };
+
+/**
+ * 色面のグラデーション（光が左上から当たっている）の <radialGradient>。
+ * 文字入りバッジ（text-badge-svg.ts）でも同じ表現を使うので、ここに切り出している
+ */
+export function baseGradientDef(id: string, color: string, lightAmount = 0.45, deepAmount = 0.2) {
+  return `<radialGradient id="${id}" cx="40%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="${lighten(color, lightAmount)}"/>
+      <stop offset="55%" stop-color="${color}"/>
+      <stop offset="100%" stop-color="${darken(color, deepAmount)}"/>
+    </radialGradient>`;
+}
+
+/** 外周だけを暗くする内側の影の <radialGradient> */
+export function shadeGradientDef(id: string) {
+  return `<radialGradient id="${id}" cx="50%" cy="50%" r="50%">
+      <stop offset="78%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.35"/>
+    </radialGradient>`;
+}
+
+/** ツヤ用の、白→透明の <linearGradient> */
+export function shineGradientDef(id: string, opacity: number) {
+  return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="${opacity}"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>`;
+}
+
+/** ツヤの楕円 */
+export function highlightEllipse(hl: Highlight, shineId: string) {
+  return `<ellipse cx="${hl.cx}" cy="${hl.cy}" rx="${hl.rx}" ry="${hl.ry}" fill="url(#${shineId})"/>`;
+}
+
 /** 文字列を SVG/HTML に埋め込んでも壊れないようにする */
-function escapeXml(s: string) {
+export function escapeXml(s: string) {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
@@ -63,12 +101,10 @@ export function renderBadgeSvg({
   highlight = {},
   idPrefix = 'gb',
 }: BadgeOptions = {}): string {
-  const hl = { cx: 50, cy: 30, rx: 32, ry: 19, opacity: 0.9, ...highlight };
+  const hl = { ...DEFAULT_HIGHLIGHT, ...highlight };
   const id = { base: `${idPrefix}-base`, shade: `${idPrefix}-shade`, shine: `${idPrefix}-shine` };
 
   const rim = darken(color, 0.35);
-  const light = lighten(color, 0.45);
-  const deep = darken(color, 0.2);
   const motifShadow = darken(color, 0.45);
 
   const motifPath = MOTIF_PATHS[motif];
@@ -92,24 +128,14 @@ export function renderBadgeSvg({
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${sizeAttrs} role="img" aria-label="${escapeXml(title)}">
   <title>${escapeXml(title)}</title>
   <defs>
-    <radialGradient id="${id.base}" cx="40%" cy="30%" r="75%">
-      <stop offset="0%" stop-color="${light}"/>
-      <stop offset="55%" stop-color="${color}"/>
-      <stop offset="100%" stop-color="${deep}"/>
-    </radialGradient>
-    <radialGradient id="${id.shade}" cx="50%" cy="50%" r="50%">
-      <stop offset="78%" stop-color="#000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000" stop-opacity="0.35"/>
-    </radialGradient>
-    <linearGradient id="${id.shine}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff" stop-opacity="${hl.opacity}"/>
-      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-    </linearGradient>
+    ${baseGradientDef(id.base, color)}
+    ${shadeGradientDef(id.shade)}
+    ${shineGradientDef(id.shine, hl.opacity)}
   </defs>
   <circle cx="50" cy="50" r="48" fill="${rim}"/>
   <circle cx="50" cy="50" r="44" fill="url(#${id.base})"/>
   <circle cx="50" cy="50" r="44" fill="url(#${id.shade})"/>${foreground}
-  <ellipse cx="${hl.cx}" cy="${hl.cy}" rx="${hl.rx}" ry="${hl.ry}" fill="url(#${id.shine})"/>
+  ${highlightEllipse(hl, id.shine)}
 </svg>
 `;
 }

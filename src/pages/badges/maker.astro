@@ -1,30 +1,103 @@
 ---
-// バッジの色変更ツール。好きな色・モチーフ・ツヤでバッジを作って保存できる。
-// 描画は配布素材と同じ renderBadgeSvg() をブラウザ側で呼んでいるので、見た目は素材と一致する。
+// グロッシーバッジメーカー。好きな色・ツヤでバッジを作って保存できる。
+// 種類は2つ：
+//   シンプル … 星・ハートのバッジ。配布素材と同じ renderBadgeSvg() で描くので、見た目は素材と一致する
+//   文字入り … 円に沿った文字と中央の文字が入るバッジ。renderTextBadgeSvg() で描く
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GlossyPill from '../../components/GlossyPill.astro';
 import { motifs } from '../../data/badges';
+import { BADGE_FONTS } from '../../lib/badge-fonts';
+import { TEXT_BADGE_PRESETS } from '../../data/text-badge-presets';
 
 const base = import.meta.env.BASE_URL;
 
-// おすすめの色見本
+// おすすめの色見本（最後の3つは金・銀・銅）
 const swatches = [
-  '#3a8ee6', '#5bc0f8', '#2fbf9b', '#8ccf3f', '#f5c623', '#f59a23',
-  '#e64545', '#f06aa8', '#ff9ec7', '#9b6ae6', '#6b7a99', '#333a4d',
+  '#3a8ee6', '#5bc0f8', '#2fbf9b', '#8ccf3f', '#f5c623',
+  '#f59a23', '#e64545', '#f06aa8', '#ff9ec7', '#9b6ae6',
+  '#6b7a99', '#333a4d', '#e6b422', '#aeb6c2', '#c8814a',
 ];
+const first = TEXT_BADGE_PRESETS[0];
 ---
 
-<BaseLayout title="バッジの色変更ツール" description="グロッシーバッジを好きな色で作って、SVG・PNGで保存できるツールです。">
-  <h1>バッジの色変更ツール</h1>
-  <p class="lead">好きな色を選ぶだけで、ツヤツヤのバッジを作れます。作ったバッジはそのまま保存できます。</p>
+<BaseLayout title="グロッシーバッジメーカー" description="円に沿った文字入りの缶バッジ・メダル風バッジを作って、SVG・PNGで保存できる無料ツールです。">
+  <h1>グロッシーバッジメーカー</h1>
+  <p class="lead">
+    缶バッジや記念メダルのような、ツヤツヤのバッジを作れます。作ったバッジはそのまま保存できます。<br />
+    文字や画像の処理はすべてお使いのブラウザの中で行われ、どこにも送信されません。
+  </p>
 
   <div class="layout">
+    <!-- スマホでは、設定を操作している間もバッジが見えるよう、画面の上に貼り付ける（sticky） -->
     <section class="preview">
-      <div id="preview" class="stage"></div>
+      <div class="stage-wrap">
+        <div id="preview" class="stage"></div>
+        <p class="loading" id="loading" hidden>フォントを読み込み中…</p>
+      </div>
       <p class="hex" id="hexLabel"></p>
     </section>
 
     <section class="panel">
+      <div class="row">
+        <span class="label">種類</span>
+        <div class="inline">
+          <button type="button" class="chip" data-mode="text">文字入り</button>
+          <button type="button" class="chip" data-mode="simple">シンプル</button>
+        </div>
+      </div>
+
+      <!-- 文字入りのときだけ表示する設定 -->
+      <div class="text-settings" id="textSettings">
+        <div class="row">
+          <span class="label">見本から選ぶ</span>
+          <div class="inline">
+            {TEXT_BADGE_PRESETS.map((p) => (
+              <button type="button" class="chip" data-tpreset={p.key}>{p.name}</button>
+            ))}
+          </div>
+        </div>
+
+        <!-- maxlength：入力できる文字数の上限。これを超える長さだと、文字が小さくなりすぎて読めないため -->
+        <label class="row">
+          <span class="label">上の文字 <span class="note">（円の上側に沿って入ります）</span></span>
+          <input type="text" id="topText" maxlength="30" value={first.top} autocomplete="off" />
+        </label>
+        <label class="row">
+          <span class="label">下の文字 <span class="note">（空欄でもOK）</span></span>
+          <input type="text" id="bottomText" maxlength="20" value={first.bottom} autocomplete="off" />
+        </label>
+        <label class="row">
+          <span class="label">中央の文字 <span class="note">（2〜3文字がおすすめ）</span></span>
+          <input type="text" id="centerText" maxlength="8" value={first.center} autocomplete="off" />
+        </label>
+        <p class="notice" id="notice" hidden></p>
+
+        <div class="row">
+          <span class="label">文字の色</span>
+          <div class="inline">
+            <button type="button" class="chip" data-textcolor="auto">自動</button>
+            <button type="button" class="chip" data-textcolor="white">白</button>
+            <button type="button" class="chip" data-textcolor="dark">濃い色</button>
+          </div>
+        </div>
+
+        <label class="row">
+          <span class="label">フォント</span>
+          <select id="font">
+            <optgroup label="日本語も使えるフォント">
+              {BADGE_FONTS.filter((f) => f.lang === 'ja').map((f) => (
+                <option value={f.key} selected={f.key === first.font}>{f.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="英字フォント（日本語は丸ゴシックで表示）">
+              {BADGE_FONTS.filter((f) => f.lang === 'en').map((f) => (
+                <option value={f.key} selected={f.key === first.font}>{f.name}</option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
+      </div>
+
       <div class="row">
         <span class="label">色</span>
         <div class="swatches">
@@ -33,12 +106,13 @@ const swatches = [
           ))}
         </div>
         <label class="inline">
-          <input type="color" id="color" value="#3a8ee6" />
+          <input type="color" id="color" value={first.color} />
           <span class="note">自由に選ぶ</span>
         </label>
       </div>
 
-      <fieldset class="row">
+      <!-- シンプルのときだけ表示する設定 -->
+      <fieldset class="row" id="motifRow" hidden>
         <legend class="label">モチーフ</legend>
         <div class="inline">
           {motifs.map((m, i) => (
@@ -82,6 +156,7 @@ const swatches = [
           <GlossyPill id="saveSvg" color="#6b7a99">SVGで保存</GlossyPill>
         </div>
         <p class="note">
+          SVGの文字は図形に変換して保存するので、フォントが入っていないパソコンでも同じ見た目で開けます。<br />
           作ったバッジは、<a href={`${base}terms/`}>利用規約</a>の範囲で個人・商用を問わず無料でお使いいただけます。
         </p>
       </div>
@@ -94,7 +169,22 @@ const swatches = [
   .layout { display: grid; gap: 24px; }
   @media (min-width: 760px) {
     .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+    /* PCでも、長い設定欄をスクロールしている間バッジが見えるようにする */
+    .preview { position: sticky; top: 16px; }
   }
+  /* スマホ：プレビューを画面の上に貼り付け、画面の高さの3分の1ほどの大きさにする */
+  @media (max-width: 759px) {
+    .preview {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      margin: 0 -16px;
+      padding: 8px 16px 4px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+  }
+  .stage-wrap { position: relative; }
   .stage {
     width: 100%;
     max-width: 320px;
@@ -106,7 +196,25 @@ const swatches = [
     background: repeating-conic-gradient(#eef1f6 0 25%, #fff 0 50%) 0 0 / 24px 24px;
   }
   .stage :global(svg) { display: block; width: 100%; height: 100%; }
+  .loading {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
   .hex { text-align: center; font-family: monospace; color: #666; }
+  /* スマホ用の大きさ。上の .stage / .hex の指定を上書きするため、それより後ろに書く */
+  @media (max-width: 759px) {
+    .stage { max-width: min(100%, 34vh); padding: 12px; }
+    .hex { margin: 2px 0 0; font-size: 0.75rem; }
+  }
 
   .panel {
     background: #fff;
@@ -116,15 +224,29 @@ const swatches = [
     display: grid;
     gap: 18px;
   }
+  .text-settings { display: grid; gap: 14px; }
+  /* [hidden] は display の指定で上書きされてしまうので、ここでも隠す */
+  [hidden] { display: none !important; }
   .row { display: grid; gap: 6px; }
   .label, legend { font-size: 0.85rem; font-weight: bold; }
+  .label .note { font-weight: normal; }
   fieldset { border: 0; margin: 0; padding: 0; }
   .inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.9rem; }
   .note { font-size: 0.75rem; color: #777; margin: 0; }
+  .notice { white-space: pre-line; margin: 0; padding: 6px 10px; border-radius: 8px; background: #fff4e5; color: #8a4b00; font-size: 0.8rem; }
+  input[type='text'], select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccd3e0;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 1rem; /* 16px 未満だと、iPhone で入力時に画面が勝手に拡大されるため */
+  }
+  #pngSize { width: auto; }
   input[type='range'] { width: 100%; }
   input[type='color'] { width: 40px; height: 32px; padding: 0; border: 1px solid #dfe5f0; border-radius: 6px; }
 
-  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 260px; }
   .swatch {
     aspect-ratio: 1;
     border: 2px solid #fff;
@@ -148,14 +270,15 @@ const swatches = [
   details summary { cursor: pointer; font-size: 0.85rem; color: #2a6fc0; }
   details[open] { display: grid; gap: 8px; }
   details .row span { font-size: 0.8rem; }
-
 </style>
 
 <script>
   // ブラウザ側でも、配布素材と同じ関数で SVG を組み立てる
-  import { renderBadgeSvg, type Motif } from '../../lib/badge-svg';
-
-  type Highlight = { cx: number; cy: number; rx: number; ry: number; opacity: number };
+  import { renderBadgeSvg, type Motif, type Highlight } from '../../lib/badge-svg';
+  import { renderTextBadgeSvg, needsFallback, type TextColorMode } from '../../lib/text-badge-svg';
+  import { loadFont, FALLBACK_FONT_KEY } from '../../lib/badge-fonts';
+  import { TEXT_BADGE_PRESETS } from '../../data/text-badge-presets';
+  import type { Font } from 'opentype.js';
 
   // ツヤのおまかせ設定。数値は viewBox（0〜100）上の位置・大きさ
   const PRESETS: Record<string, Highlight> = {
@@ -165,53 +288,147 @@ const swatches = [
     none: { cx: 50, cy: 30, rx: 32, ry: 19, opacity: 0 },
   };
 
+  const first = TEXT_BADGE_PRESETS[0];
   const state = {
-    color: '#3a8ee6',
+    mode: 'text' as 'text' | 'simple',
+    color: first.color,
     motif: 'star' as Motif,
     hl: { ...PRESETS.normal },
     preset: 'normal',
+    // 文字入り
+    tpreset: first.key,
+    top: first.top,
+    bottom: first.bottom,
+    center: first.center,
+    textColor: first.textColor as TextColorMode,
+    font: first.font,
   };
 
-  const preview = document.getElementById('preview')!;
-  const hexLabel = document.getElementById('hexLabel')!;
-  const colorInput = document.getElementById('color') as HTMLInputElement;
+  // 読み込み済みのフォント（保存のときにもこれを使う）
+  let font: Font | undefined;
+  let fallback: Font | undefined;
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const preview = $('preview');
+  const hexLabel = $('hexLabel');
+  const loading = $('loading');
+  const notice = $('notice');
+  const colorInput = $<HTMLInputElement>('color');
+  const topInput = $<HTMLInputElement>('topText');
+  const bottomInput = $<HTMLInputElement>('bottomText');
+  const centerInput = $<HTMLInputElement>('centerText');
+  const fontSelect = $<HTMLSelectElement>('font');
   const hlInputs = document.querySelectorAll<HTMLInputElement>('input[data-hl]');
 
-  function svgString(size?: number) {
-    return renderBadgeSvg({
+  /** 今の設定で SVG の文字列を作る。文字入りでフォントがまだ読み込めていないときは null */
+  function svgString(size?: number): string | null {
+    if (state.mode === 'simple') {
+      return renderBadgeSvg({
+        color: state.color,
+        motif: state.motif,
+        highlight: state.hl,
+        size,
+        title: 'グロッシーバッジ',
+        idPrefix: 'maker',
+      });
+    }
+    if (!font) return null;
+    const result = renderTextBadgeSvg({
       color: state.color,
-      motif: state.motif,
+      top: state.top,
+      bottom: state.bottom,
+      center: state.center,
+      textColor: state.textColor,
+      font,
+      fallback,
       highlight: state.hl,
       size,
-      title: 'グロッシーバッジ',
       idPrefix: 'maker',
     });
+    showNotice(result.missing, result.tooLong);
+    return result.svg;
+  }
+
+  /** 使えない文字や、長すぎる文字があるときに知らせる */
+  function showNotice(missing: string[], tooLong: { top: boolean; bottom: boolean; center: boolean }) {
+    const msgs: string[] = [];
+    if (missing.length) msgs.push(`使えない文字があります：${missing.join(' ')}（フォントに入っていないため表示されません）`);
+    const long = [tooLong.top && '上', tooLong.bottom && '下', tooLong.center && '中央'].filter(Boolean);
+    if (long.length) msgs.push(`${long.join('・')}の文字が長いため、小さく表示されています。`);
+    notice.textContent = msgs.join('\n');
+    notice.hidden = msgs.length === 0;
+  }
+
+  // フォントの読み込みは時間がかかるので、読み込み中に別のフォントを選び直されたときは古い結果を捨てる
+  let loadSeq = 0;
+  async function ensureFonts() {
+    const seq = ++loadSeq;
+    const allText = state.top + state.bottom + state.center;
+    loading.hidden = false;
+    try {
+      const main = await loadFont(state.font);
+      // 選んだフォントにない文字（英字フォントでの日本語など）があるときだけ、代わりのフォントも読み込む
+      const fb = needsFallback(main, allText) ? await loadFont(FALLBACK_FONT_KEY) : fallback;
+      if (seq !== loadSeq) return;
+      font = main;
+      fallback = fb;
+    } catch {
+      if (seq !== loadSeq) return;
+      notice.textContent = 'フォントを読み込めませんでした。通信状況を確認して、ページを再読み込みしてください。';
+      notice.hidden = false;
+    } finally {
+      if (seq === loadSeq) loading.hidden = true;
+    }
+    render();
   }
 
   function render() {
-    preview.innerHTML = svgString();
+    // 文字入りで、まだフォントがないとき・必要な代わりのフォントがないときは、読み込んでから描き直す
+    if (state.mode === 'text') {
+      const allText = state.top + state.bottom + state.center;
+      if (!font || (needsFallback(font, allText) && !fallback)) {
+        if (loading.hidden) ensureFonts();
+        if (!font) return;
+      }
+    }
+    const svg = svgString();
+    if (svg) preview.innerHTML = svg;
+
     hexLabel.textContent = state.color;
     colorInput.value = state.color;
-    document.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
-      b.setAttribute('aria-pressed', String(b.dataset.color === state.color)),
-    );
-    document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
-      b.setAttribute('aria-pressed', String(b.dataset.preset === state.preset)),
-    );
+    $('textSettings').hidden = state.mode !== 'text';
+    $('motifRow').hidden = state.mode !== 'simple';
+    if (state.mode === 'simple') notice.hidden = true;
+    const pressed = (sel: string, key: string, value: string) =>
+      document.querySelectorAll<HTMLButtonElement>(sel).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[key] === value)));
+    pressed('.swatch', 'color', state.color);
+    pressed('[data-preset]', 'preset', state.preset);
+    pressed('[data-mode]', 'mode', state.mode);
+    pressed('[data-tpreset]', 'tpreset', state.tpreset);
+    pressed('[data-textcolor]', 'textcolor', state.textColor);
     hlInputs.forEach((el) => (el.value = String(state.hl[el.dataset.hl as keyof Highlight])));
   }
 
   // ---------- 操作 ----------
 
+  document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.mode = b.dataset.mode as 'text' | 'simple';
+      render();
+    }),
+  );
+
   document.querySelectorAll<HTMLButtonElement>('.swatch').forEach((b) =>
     b.addEventListener('click', () => {
       state.color = b.dataset.color!;
+      state.tpreset = '';
       render();
     }),
   );
   // input イベント：カラーピッカーを動かしている最中も、リアルタイムに反映される
   colorInput.addEventListener('input', () => {
     state.color = colorInput.value;
+    state.tpreset = '';
     render();
   });
 
@@ -237,10 +454,59 @@ const swatches = [
     }),
   );
 
+  // 文字入りの見本：色・文字・フォントをまとめて切り替える
+  document.querySelectorAll<HTMLButtonElement>('[data-tpreset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const p = TEXT_BADGE_PRESETS.find((x) => x.key === b.dataset.tpreset)!;
+      Object.assign(state, {
+        tpreset: p.key,
+        color: p.color,
+        top: p.top,
+        bottom: p.bottom,
+        center: p.center,
+        textColor: p.textColor,
+        font: p.font,
+      });
+      topInput.value = p.top;
+      bottomInput.value = p.bottom;
+      centerInput.value = p.center;
+      fontSelect.value = p.font;
+      ensureFonts();
+    }),
+  );
+
+  for (const [input, key] of [
+    [topInput, 'top'],
+    [bottomInput, 'bottom'],
+    [centerInput, 'center'],
+  ] as const) {
+    input.addEventListener('input', () => {
+      state[key] = input.value;
+      state.tpreset = '';
+      render();
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-textcolor]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.textColor = b.dataset.textcolor as TextColorMode;
+      state.tpreset = '';
+      render();
+    }),
+  );
+
+  fontSelect.addEventListener('change', () => {
+    state.font = fontSelect.value;
+    state.tpreset = '';
+    ensureFonts();
+  });
+
   // ---------- 保存 ----------
 
   function fileBase() {
-    return `glossy-badge-${state.motif}-${state.color.slice(1)}`;
+    return state.mode === 'simple'
+      ? `glossy-badge-${state.motif}-${state.color.slice(1)}`
+      : `glossy-badge-text-${state.color.slice(1)}`;
   }
 
   function download(blob: Blob, filename: string) {
@@ -251,14 +517,17 @@ const swatches = [
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
-  document.getElementById('saveSvg')!.addEventListener('click', () => {
-    download(new Blob([svgString(256)], { type: 'image/svg+xml' }), `${fileBase()}.svg`);
+  $('saveSvg').addEventListener('click', () => {
+    const svg = svgString(256);
+    if (svg) download(new Blob([svg], { type: 'image/svg+xml' }), `${fileBase()}.svg`);
   });
 
   // PNG：SVG を画像として読み込み、指定サイズの canvas に描いてから PNG に変換する
-  document.getElementById('savePng')!.addEventListener('click', async () => {
-    const size = Number((document.getElementById('pngSize') as HTMLSelectElement).value);
-    const url = URL.createObjectURL(new Blob([svgString(size)], { type: 'image/svg+xml' }));
+  $('savePng').addEventListener('click', async () => {
+    const size = Number($<HTMLSelectElement>('pngSize').value);
+    const svg = svgString(size);
+    if (!svg) return;
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
     const img = new Image();
     img.src = url;
     await img.decode();
