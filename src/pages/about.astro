@@ -1,0 +1,58 @@
+---
+// 運営者情報。運営者名などは src/data/site.ts の OPERATOR で変えられる。
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_NAME, SITE_DESCRIPTION, OPERATOR } from '../data/site';
+
+const base = import.meta.env.BASE_URL;
+
+// 表に並べる項目
+const rows = [
+  { label: 'サイト名', value: SITE_NAME },
+  { label: 'URL', value: 'https://maybeusefulbox.github.io/' },
+  { label: '運営者', value: OPERATOR.name || '（準備中）' },
+  { label: '開設', value: OPERATOR.since },
+  { label: '内容', value: SITE_DESCRIPTION },
+];
+---
+
+<BaseLayout title="運営者情報" description={`${SITE_NAME}の運営者情報です。`}>
+  <article class="doc">
+    <h1>運営者情報</h1>
+
+    <!-- dl：「項目名と内容」の組を並べるための HTML の要素 -->
+    <dl class="info">
+      {rows.map((r) => (
+        <div class="item">
+          <dt>{r.label}</dt>
+          <dd>{r.value}</dd>
+        </div>
+      ))}
+      <div class="item">
+        <dt>お問い合わせ</dt>
+        <dd><a href={`${base}contact/`}>お問い合わせページ</a>からお願いします。</dd>
+      </div>
+    </dl>
+
+    <p class="links">
+      <a href={`${base}terms/`}>利用規約</a> ／ <a href={`${base}privacy/`}>プライバシーポリシー</a>
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .info { margin: 1em 0; border-top: 1px solid var(--line); }
+  .item {
+    display: grid;
+    grid-template-columns: 8em 1fr;
+    gap: 8px 16px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  dt { font-weight: 700; }
+  dd { margin: 0; line-height: 1.8; }
+  /* スマホでは項目名と内容を縦に並べる */
+  @media (max-width: 480px) {
+    .item { grid-template-columns: 1fr; gap: 2px; }
+  }
+  .links { margin-top: 2em; font-size: 0.9rem; }
+</style>

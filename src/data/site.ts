@@ -19,6 +19,26 @@ export const nav = [
   { path: 'terms/', label: '利用規約' },
 ];
 
+/** フッターの下の段に小さく出すリンク（サイトの決まりごと・運営情報のページ） */
+export const footerLinks = [
+  { path: 'about/', label: '運営者情報' },
+  { path: 'privacy/', label: 'プライバシーポリシー' },
+  { path: 'contact/', label: 'お問い合わせ' },
+];
+
+/**
+ * 運営者の情報。運営者情報・プライバシーポリシー・お問い合わせのページで使う。
+ * 空欄（''）のところは、ページに「準備中」などと表示される
+ */
+export const OPERATOR = {
+  /** 運営者名（ハンドルネームで OK） */
+  name: 'たぶん便利BOX',
+  /** サイトを開設した年月 */
+  since: '2026年10月',
+  /** お問い合わせフォーム（Google フォームなど）の URL */
+  contactFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSf8rxFTg7wZj2ebDu4Ybe_EqY4v4mK_5FHyuvHQltOZ48xLdg/viewform',
+};
+
 /**
  * トップページのコンテンツタイル。
  * href が null のものは「準備中」として表示される（リンクにならない）。

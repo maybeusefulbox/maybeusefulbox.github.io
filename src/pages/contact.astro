@@ -1,0 +1,51 @@
+---
+// お問い合わせ。
+// フォーム本体は Google フォームなどの外部サービスを使う（このサイトは静的なページだけで、送信を受け取る仕組みがないため）。
+// フォームの URL は src/data/site.ts の OPERATOR.contactFormUrl に書く。空欄のあいだは「準備中」と表示される。
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_NAME, OPERATOR } from '../data/site';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="お問い合わせ" description={`${SITE_NAME}へのお問い合わせはこちらから。`}>
+  <article class="doc">
+    <h1>お問い合わせ</h1>
+    <p>
+      {SITE_NAME}へのご意見・ご感想、ツールの不具合のご報告などは、下のフォームからお送りください。
+    </p>
+
+    {OPERATOR.contactFormUrl ? (
+      <p class="form-link">
+        <a class="button" href={OPERATOR.contactFormUrl} target="_blank" rel="noopener">お問い合わせフォームを開く</a>
+      </p>
+    ) : (
+      <p class="preparing">お問い合わせフォームは準備中です。</p>
+    )}
+
+    <h2>ご注意</h2>
+    <ul>
+      <li>内容によっては、お返事までお時間をいただくことや、お返事できないことがあります。</li>
+      <li>いただいた情報の扱いについては、<a href={`${base}privacy/`}>プライバシーポリシー</a>をご覧ください。</li>
+      <li>ツールの使い方や作った画像の扱いについては、各ツールのページや<a href={`${base}terms/`}>利用規約</a>もご確認ください。</li>
+    </ul>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc h2 { font-size: 1.05rem; margin: 1.8em 0 0.4em; }
+  .doc p, .doc li { line-height: 1.9; }
+  .doc ul { padding-left: 1.2em; }
+  .form-link { margin: 1.5em 0; }
+  .button {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .button:hover { opacity: 0.9; }
+  .preparing { margin: 1.5em 0; padding: 12px 16px; border-radius: 8px; background: var(--ph-bg); }
+</style>
