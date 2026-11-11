@@ -5,6 +5,7 @@
 //   文字入り … 円に沿った文字と中央の文字が入るバッジ。renderTextBadgeSvg() で描く
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AdSlot from '../../components/AdSlot.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
 import GlossyPill from '../../components/GlossyPill.astro';
 import type { Motif } from '../../lib/badge-svg';
 import { FONTS } from '../../lib/fonts';
@@ -200,6 +201,9 @@ const motifs: { key: Motif; name: string }[] = [
       </div>
     </section>
   </div>
+
+  <!-- SNS のシェアボタン（ツールを使い終わったところに置く） -->
+  <ShareButtons text="缶バッジ・メダル風のアイコンが無料で作れるツール" hashtags={['メダル風アイコンメーカー', '推し活']} />
 
   <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
   <AdSlot place="badges" />

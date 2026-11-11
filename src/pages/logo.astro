@@ -5,6 +5,7 @@
 // 処理はすべてブラウザ内（下の <script>）で行い、入力した文字はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import ShareButtons from '../components/ShareButtons.astro';
 import TermsBody from '../components/TermsBody.astro';
 import { FONTS } from '../lib/fonts';
 import { TEXT_LOGO_PRESETS } from '../data/text-logo-presets';
@@ -159,6 +160,9 @@ const DEFAULT_TEXT = 'たぶん便利BOX';
         </div>
       </section>
     </div>
+
+    <!-- SNS のシェアボタン（ツールを使い終わったところに置く） -->
+    <ShareButtons text="好きなフォントでロゴ画像が作れる無料ツール" hashtags={['ロゴメーカー']} />
 
     <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
     <AdSlot place="logo" />

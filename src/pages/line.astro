@@ -3,6 +3,7 @@
 // スタンプを増やすときは、画像を src/assets/ に置いて import し、下の stamps に1行追加する。
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import ShareButtons from '../components/ShareButtons.astro';
 import { Image } from 'astro:assets';
 import usaneko from '../assets/line-usaneko.png';
 import nomiko from '../assets/line-nomiko.webp';
@@ -40,6 +41,9 @@ const stamps = [
       </li>
     ))}
   </ul>
+
+  <!-- SNS のシェアボタン（ツールを使い終わったところに置く） -->
+  <ShareButtons text="オリジナルLINEスタンプ配信中！" hashtags={['LINEスタンプ']} />
 
   <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
   <AdSlot place="line" />

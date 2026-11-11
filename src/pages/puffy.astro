@@ -4,6 +4,7 @@
 // 処理はすべてブラウザ内（下の <script>）で行い、画像はどこにも送信しない。
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import ShareButtons from '../components/ShareButtons.astro';
 import { Image } from 'astro:assets';
 import TermsBody from '../components/TermsBody.astro';
 import step1 from '../assets/puffy-step1.png';
@@ -129,6 +130,9 @@ const steps = [
         </div>
       </section>
     </div>
+
+    <!-- SNS のシェアボタン（ツールを使い終わったところに置く） -->
+    <ShareButtons text="画像をぷっくりツヤツヤのシール風アイコンに加工できる無料ツール" hashtags={['ボンドロ風画像メーカー']} />
 
     <!-- 広告（src/data/ads.ts に登録したものだけ表示。なければ何も出ない） -->
     <AdSlot place="puffy" />
