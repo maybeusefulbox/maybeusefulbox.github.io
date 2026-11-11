@@ -22,9 +22,14 @@ const FONTS = [
   { key: 'zen-maru', dir: 'zenmarugothic', file: 'ZenMaruGothic-Bold.ttf', ja: true },
   { key: 'mplus-rounded', dir: 'mplusrounded1c', file: 'MPLUSRounded1c-ExtraBold.ttf', ja: true },
   { key: 'dela-gothic', dir: 'delagothicone', file: 'DelaGothicOne-Regular.ttf', ja: true },
+  { key: 'yusei-magic', dir: 'yuseimagic', file: 'YuseiMagic-Regular.ttf', ja: true },
+  { key: 'shippori-mincho', dir: 'shipporiminchob1', file: 'ShipporiMinchoB1-ExtraBold.ttf', ja: true },
   { key: 'fredoka', dir: 'fredoka', file: 'Fredoka[wdth,wght].ttf', axes: { wght: 700, wdth: 100 } },
   { key: 'lilita', dir: 'lilitaone', file: 'LilitaOne-Regular.ttf' },
   { key: 'cinzel', dir: 'cinzel', file: 'Cinzel[wght].ttf', axes: { wght: 800 } },
+  { key: 'pacifico', dir: 'pacifico', file: 'Pacifico-Regular.ttf' },
+  { key: 'bungee', dir: 'bungee', file: 'Bungee-Regular.ttf' },
+  { key: 'righteous', dir: 'righteous', file: 'Righteous-Regular.ttf' },
 ];
 
 // 日本語フォントに残す文字：Shift_JIS で表せる文字（英数字・記号・かな・JIS第1水準の漢字 約3000字）

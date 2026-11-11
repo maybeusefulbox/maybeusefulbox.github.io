@@ -10,8 +10,8 @@ export const SITE_DESCRIPTION =
 export const nav = [
   { path: '', label: 'トップ' },
   { path: 'puffy/', label: 'ボンドロ風画像メーカー' },
-  { path: 'badges/', label: 'グロッシーバッジ素材' },
   { path: 'badges/maker/', label: 'グロッシーバッジメーカー' },
+  { path: 'logo/', label: 'テキストロゴメーカー' },
   { path: 'line/', label: 'LINEスタンプ' },
   { path: 'terms/', label: '利用規約' },
 ];
@@ -32,6 +32,8 @@ export const contents: { label: string; href: string | null; icon?: ImageMetadat
 
 /** 更新履歴（新しいものを上に足していく）。今はトップに表示していない */
 export const updates = [
+  { date: '2026-11-11', text: 'テキストロゴメーカーを公開しました' },
+  { date: '2026-11-11', text: 'グロッシーバッジ素材の配布を終了しました（グロッシーバッジメーカーで作れます）' },
   { date: '2026-10-30', text: 'サイト名を「たぶん便利BOX」にして、デザインを新しくしました' },
   { date: '2026-10-29', text: 'サイトのURLを https://maybeusefulbox.github.io/ に移転しました' },
   { date: '2026-10-06', text: 'バッジの色変更ツールを公開しました' },

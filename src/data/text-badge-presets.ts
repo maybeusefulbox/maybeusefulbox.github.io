@@ -1,6 +1,6 @@
 // 文字入りバッジのプリセット（最初から選べる見本）。
 // ここに1件足すと、ツールのプリセットのボタンが増える。
-// font は src/lib/badge-fonts.ts の key、textColor は 'auto'（自動）/'white'（白）/'dark'（濃い色）
+// font は src/lib/fonts.ts の key、textColor は 'auto'（自動）/'white'（白）/'dark'（濃い色）
 import type { TextColorMode } from '../lib/text-badge-svg';
 
 export interface TextBadgePreset {

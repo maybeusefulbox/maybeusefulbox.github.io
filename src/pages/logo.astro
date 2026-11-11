@@ -1,0 +1,620 @@
+---
+// テキストロゴメーカー
+// 文字とフォントを選んで、ロゴ画像（SVG・PNG）を作るツール。
+// 文字は opentype.js で図形（パス）にして描くので、保存した SVG はフォントがない環境でも同じ見た目になる。
+// 処理はすべてブラウザ内（下の <script>）で行い、入力した文字はどこにも送信しない。
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TermsBody from '../components/TermsBody.astro';
+import { FONTS } from '../lib/fonts';
+import { TEXT_LOGO_PRESETS } from '../data/text-logo-presets';
+
+const first = TEXT_LOGO_PRESETS.find((p) => p.key === 'pop')!;
+const DEFAULT_TEXT = 'たぶん便利BOX';
+---
+
+<BaseLayout title="テキストロゴメーカー" description="好きな文字とフォントでロゴ画像を作って、SVG・PNGで保存できる無料ツール。縁取り・影・ツヤも付けられます。">
+  <div class="logo-tool">
+    <h1>テキストロゴメーカー</h1>
+    <p class="lead">
+      好きな文字とフォントを選ぶと、ブログのタイトルや、同人誌・SNS画像の見出しに使えるロゴを作れます。<br />
+      入力した文字はお使いのブラウザの中だけで処理され、どこにも送信されません。
+    </p>
+
+    <!-- href="#terms" で、同じページの id="terms" の場所へ移動する（ページ内リンク） -->
+    <p class="terms-link"><a href="#terms">利用規約はこちら</a></p>
+
+    <div class="layout tool-frame">
+      <section class="stage">
+        <div class="preview" id="preview" aria-live="polite"></div>
+        <p class="loading" id="loading" hidden>フォントを読み込み中…</p>
+        <p class="hint" id="sizeLabel"></p>
+      </section>
+
+      <section class="panel">
+        <div class="row">
+          <span>プリセット</span>
+          <div class="inline">
+            {TEXT_LOGO_PRESETS.map((p) => (
+              <button type="button" class="pill small ghost" data-preset={p.key}>{p.name}</button>
+            ))}
+          </div>
+          <p class="note">文字はそのままで、フォントや色などの雰囲気だけが変わります。</p>
+        </div>
+
+        <label class="row">
+          <span>テキスト <span class="note">（改行すると複数行になります）</span></span>
+          <textarea id="text" rows="2" maxlength="80">{DEFAULT_TEXT}</textarea>
+        </label>
+        <p class="notice" id="notice" hidden></p>
+
+        <label class="row">
+          <span>フォント</span>
+          <select id="font">
+            <optgroup label="日本語も使えるフォント">
+              {FONTS.filter((f) => f.lang === 'ja').map((f) => (
+                <option value={f.key} selected={f.key === first.font}>{f.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="英字フォント（日本語は丸ゴシックで表示）">
+              {FONTS.filter((f) => f.lang === 'en').map((f) => (
+                <option value={f.key}>{f.name}</option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
+
+        <div class="row">
+          <span>文字の色・そろえ方</span>
+          <div class="inline">
+            <input type="color" id="color" value={first.color} aria-label="文字の色" />
+            <button type="button" class="pill small ghost" data-align="left">左</button>
+            <button type="button" class="pill small ghost" data-align="center">中央</button>
+            <button type="button" class="pill small ghost" data-align="right">右</button>
+          </div>
+        </div>
+
+        <label class="row">
+          <span>文字の大きさ <output id="sizeOut"></output></span>
+          <input type="range" id="size" min="40" max="240" step="1" value="100" />
+        </label>
+        <label class="row">
+          <span>文字間</span>
+          <input type="range" id="tracking" min="-0.1" max="0.5" step="0.01" value={first.tracking} />
+        </label>
+        <label class="row">
+          <span>行間</span>
+          <input type="range" id="lineHeight" min="0.8" max="2" step="0.01" value={first.lineHeight} />
+        </label>
+
+        <fieldset>
+          <legend>縁取り</legend>
+          <div class="inline">
+            <button type="button" class="pill small ghost" data-outline="none">なし</button>
+            <button type="button" class="pill small ghost" data-outline="single">あり</button>
+            <button type="button" class="pill small ghost" data-outline="double">二重</button>
+          </div>
+          <div class="inline" id="outline1Row">
+            <input type="color" id="outline1Color" aria-label="縁取りの色" />
+            <input type="range" id="outline1Width" min="1" max="20" step="0.5" aria-label="縁取りの太さ" class="grow" />
+          </div>
+          <div class="inline" id="outline2Row">
+            <input type="color" id="outline2Color" aria-label="外側の縁取りの色" />
+            <input type="range" id="outline2Width" min="1" max="20" step="0.5" aria-label="外側の縁取りの太さ" class="grow" />
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>影</legend>
+          <div class="inline">
+            <button type="button" class="pill small ghost" data-shadow="none">なし</button>
+            <button type="button" class="pill small ghost" data-shadow="hard">くっきり</button>
+            <button type="button" class="pill small ghost" data-shadow="soft">ふんわり</button>
+          </div>
+          <div class="inline" id="shadowRow">
+            <input type="color" id="shadowColor" aria-label="影の色" />
+            <label class="grow-label">ずらす量<input type="range" id="shadowOffset" min="0" max="20" step="0.5" /></label>
+          </div>
+          <label class="row" id="blurRow"><span class="sub">ぼかし</span><input type="range" id="shadowBlur" min="1" max="16" step="0.5" /></label>
+        </fieldset>
+
+        <label class="inline"><input type="checkbox" id="gloss" /> ツヤをのせる</label>
+
+        <fieldset>
+          <legend>背景・余白</legend>
+          <div class="inline">
+            <label><input type="radio" name="bg" value="none" checked /> 透明</label>
+            <label><input type="radio" name="bg" value="color" /> 色</label>
+            <input type="color" id="bgColor" value="#fff4dc" aria-label="背景の色" />
+          </div>
+          <label class="row"><span class="sub">余白</span><input type="range" id="padding" min="0" max="80" step="1" value="16" /></label>
+        </fieldset>
+
+        <div class="export">
+          <label class="inline">
+            PNGのサイズ
+            <select id="scale">
+              <option value="1">等倍</option>
+              <option value="2" selected>2倍</option>
+              <option value="4">4倍</option>
+            </select>
+          </label>
+          <div class="inline">
+            <button type="button" class="pill" id="savePng">PNGで保存</button>
+            <button type="button" class="pill" id="saveSvg">SVGで保存</button>
+          </div>
+          <p class="terms">
+            作ったロゴは、個人・商用を問わず自由にお使いいただけます（お店やサービスのロゴ、商標登録も可）。
+            SVG の文字は図形に変換して保存するので、フォントが入っていないパソコンでも同じ見た目で開けます。
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <details class="fold terms-section" id="terms">
+      <summary><h2 class="mark">利用規約</h2></summary>
+      <TermsBody level={3} showLogo />
+    </details>
+  </div>
+</BaseLayout>
+
+<style>
+  .logo-tool {
+    --frame: #d6cfca; /* ツールを囲む枠の色 */
+    --panel: #ffffff;
+    --muted: #777;
+    --accent: #c98a52;
+    --accent-light: #f0c89f;
+    --accent-dark: #8f5a2e;
+    --line: #ecdccd;
+  }
+  .lead { font-size: 0.95rem; line-height: 1.8; }
+  .terms-link { margin: 8px 0 0; font-size: 0.9rem; }
+
+  /* 開閉できる見出し（アコーディオン）。閉じているときは ▶、開いているときは ▼ に見える */
+  .fold { margin-top: 12px; }
+  .fold > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px; /* スマホで押しやすい高さ */
+    list-style: none; /* ブラウザ標準の三角を消す */
+    cursor: pointer;
+  }
+  .fold > summary::-webkit-details-marker { display: none; } /* Safari の標準の三角を消す */
+  .fold > summary:hover .mark { color: var(--accent-dark); }
+  .mark { font-size: 1.1rem; margin: 0; }
+  .mark::before {
+    content: '▼';
+    display: inline-block;
+    margin-right: 0.3em;
+    transition: transform 0.15s;
+  }
+  .fold:not([open]) .mark::before { transform: rotate(-90deg); }
+  .terms-section { font-size: 0.9rem; }
+
+  /* ツール本体を枠で囲む */
+  .layout {
+    display: grid;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  /* 「読み込み中」の表示をプレビューの上に重ねるための基準（PC・スマホでは下の sticky が上書きする） */
+  .stage { position: relative; }
+  .layout.tool-frame {
+    margin-top: 24px;
+    padding: 16px;
+    border: 2px solid var(--frame);
+    border-radius: 6px;
+  }
+  @media (min-width: 760px) {
+    .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+    /* 右の設定が長くても、プレビューが画面内に残るようにする */
+    .stage { position: sticky; top: 16px; }
+  }
+  /* スマホ：プレビューを画面上部に固定して、設定だけがその下をスクロールするようにする */
+  @media (max-width: 759px) {
+    .layout { display: block; }
+    .stage {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 8px 0;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+    /* 下の .preview の高さより優先させるため、.stage を付けて指定を強くしている */
+    .stage .preview { height: 24vh; padding: 8px; }
+    .hint { margin: 4px 0 0; font-size: 0.7rem; }
+    .panel { margin-top: 12px; }
+  }
+
+  /* プレビュー：透明部分がわかるように市松模様を敷き、ロゴを枠の中に収める */
+  .preview {
+    display: grid;
+    place-items: center;
+    height: 320px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 2px dashed var(--line);
+    background: repeating-conic-gradient(#f4f4f4 0 25%, #fff 0 50%) 0 0 / 24px 24px;
+    overflow: hidden;
+  }
+  .preview :global(svg) { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; }
+  .loading {
+    position: absolute;
+    left: 50%;
+    top: 16px;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .hint { text-align: center; font-size: 0.8rem; color: var(--muted); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    display: grid;
+    gap: 16px;
+  }
+  .row { display: grid; gap: 6px; }
+  .row > span, legend { font-size: 0.85rem; font-weight: bold; }
+  .row > span .note, .row > span output { font-weight: normal; }
+  .sub { font-size: 0.8rem !important; font-weight: normal !important; }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .grow { flex: 1; }
+  .grow-label { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+  .grow-label input { flex: 1; }
+  /* [hidden] は display の指定で上書きされてしまうので、ここでも隠す */
+  [hidden] { display: none !important; }
+  input[type='range'] { width: 100%; accent-color: var(--accent); }
+  input[type='color'] { width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 6px; }
+  textarea, select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 1rem; /* 16px 未満だと、iPhone で入力時に画面が勝手に拡大されるため */
+  }
+  textarea { resize: vertical; }
+  #scale { width: auto; }
+  .note { font-size: 0.75rem; color: var(--muted); margin: 0; }
+  .notice { white-space: pre-line; margin: 0; padding: 6px 10px; border-radius: 8px; background: #fff4e5; color: #8a4b00; font-size: 0.8rem; }
+
+  /* ピル型のグロッシーボタン（ボンドロ風画像メーカーと同じ作り。色だけ変えている） */
+  .pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid var(--accent-dark);
+    border-radius: 999px;
+    background: radial-gradient(ellipse at 50% 20%, var(--accent-light), var(--accent) 60%, var(--accent-dark));
+    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.15);
+    color: #fff;
+    font: inherit;
+    font-weight: bold;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .pill::before {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 2px;
+    height: 48%;
+    border-radius: 999px;
+    background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+    pointer-events: none;
+  }
+  .pill.small { padding: 6px 12px; font-size: 0.85rem; }
+  .pill.ghost { background: #fff; color: var(--accent-dark); text-shadow: none; border-color: var(--line); box-shadow: none; }
+  .pill.ghost::before { display: none; }
+  .pill.ghost[aria-pressed='true'] { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+
+  .export { display: grid; gap: 8px; }
+  .terms { font-size: 0.75rem; color: var(--muted); line-height: 1.6; margin: 0; }
+</style>
+
+<script>
+  // 「利用規約はこちら」から移動したとき、閉じている利用規約を開く
+  function openTermsIfTargeted() {
+    if (location.hash !== '#terms') return;
+    const terms = document.getElementById('terms') as HTMLDetailsElement | null;
+    if (!terms) return;
+    terms.open = true;
+    terms.scrollIntoView();
+  }
+  window.addEventListener('hashchange', openTermsIfTargeted);
+  openTermsIfTargeted();
+  // URL がすでに #terms のときは hashchange が起きないので、リンクを押したときにも開く
+  document.querySelector('.terms-link a')?.addEventListener('click', () => {
+    const terms = document.getElementById('terms') as HTMLDetailsElement | null;
+    if (terms) terms.open = true;
+  });
+</script>
+
+<script>
+  import type { Font } from 'opentype.js';
+  import { renderTextLogoSvg, needsFallback, type Outline, type Shadow } from '../lib/text-logo-svg';
+  import { loadFont, FALLBACK_FONT_KEY } from '../lib/fonts';
+  import { TEXT_LOGO_PRESETS, type TextLogoStyle } from '../data/text-logo-presets';
+
+  // 縁取り・影・余白の数値は「文字の大きさ 100px のとき」の値。文字を大きくすると同じ割合で太くなる
+  const BASE_SIZE = 100;
+  // 「なし」から「あり」にしたときに使う値
+  const DEFAULT_OUTLINE: Outline = { color: '#ffffff', width: 6 };
+  const DEFAULT_OUTLINE2: Outline = { color: '#333333', width: 4 };
+  const DEFAULT_SHADOW: Shadow = { type: 'hard', color: '#333333', offset: 5, blur: 4 };
+
+  const first = TEXT_LOGO_PRESETS.find((p) => p.key === 'pop')!;
+  const state = {
+    text: '',
+    size: 100,
+    align: 'center' as 'left' | 'center' | 'right',
+    padding: 16,
+    preset: first.key,
+    style: structuredClone(first) as TextLogoStyle,
+    // 「なし」にしても、もう一度「あり」にしたときに前の色・太さに戻せるよう、別に覚えておく
+    outline: { ...(first.outline ?? DEFAULT_OUTLINE) },
+    outline2: { ...(first.outline2 ?? DEFAULT_OUTLINE2) },
+    shadow: { ...(first.shadow ?? DEFAULT_SHADOW) },
+    outlineMode: (first.outline2 ? 'double' : first.outline ? 'single' : 'none') as 'none' | 'single' | 'double',
+    shadowMode: (first.shadow?.type ?? 'none') as 'none' | 'hard' | 'soft',
+    bgMode: 'none' as 'none' | 'color',
+    bgColor: '#fff4dc',
+  };
+
+  let font: Font | undefined;
+  let fallback: Font | undefined;
+  let lastSize = { width: 0, height: 0 };
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const preview = $('preview');
+  const loading = $('loading');
+  const notice = $('notice');
+  const textInput = $<HTMLTextAreaElement>('text');
+  const fontSelect = $<HTMLSelectElement>('font');
+  state.text = textInput.value;
+
+  // ---------- 描画 ----------
+
+  /** 今の設定で SVG を作る。フォントがまだないときは null */
+  function build() {
+    if (!font) return null;
+    const k = state.size / BASE_SIZE;
+    const s = state.style;
+    const result = renderTextLogoSvg({
+      text: state.text,
+      font,
+      fallback,
+      size: state.size,
+      tracking: s.tracking,
+      lineHeight: s.lineHeight,
+      align: state.align,
+      color: s.color,
+      outline: state.outlineMode !== 'none' ? { ...state.outline, width: state.outline.width * k } : undefined,
+      outline2: state.outlineMode === 'double' ? { ...state.outline2, width: state.outline2.width * k } : undefined,
+      shadow:
+        state.shadowMode !== 'none'
+          ? { ...state.shadow, type: state.shadowMode, offset: state.shadow.offset * k, blur: state.shadow.blur * k }
+          : undefined,
+      gloss: s.gloss,
+      background: state.bgMode === 'color' ? state.bgColor : undefined,
+      padding: state.padding * k,
+      idPrefix: 'logo',
+    });
+    const msgs: string[] = [];
+    if (result.missing.length) msgs.push(`使えない文字があります：${result.missing.join(' ')}（フォントに入っていないため表示されません）`);
+    if (!state.text.trim()) msgs.push('テキストを入力してください。');
+    notice.textContent = msgs.join('\n');
+    notice.hidden = msgs.length === 0;
+    return result;
+  }
+
+  // フォントの読み込み中に別のフォントを選び直されたときは、古い結果を捨てる
+  let loadSeq = 0;
+  async function ensureFonts() {
+    const seq = ++loadSeq;
+    loading.hidden = false;
+    try {
+      const main = await loadFont(state.style.font);
+      // 選んだフォントにない文字（英字フォントでの日本語など）があるときだけ、代わりのフォントも読み込む
+      const fb = needsFallback(main, state.text) ? await loadFont(FALLBACK_FONT_KEY) : fallback;
+      if (seq !== loadSeq) return;
+      font = main;
+      fallback = fb;
+    } catch {
+      if (seq !== loadSeq) return;
+      notice.textContent = 'フォントを読み込めませんでした。通信状況を確認して、ページを再読み込みしてください。';
+      notice.hidden = false;
+    } finally {
+      if (seq === loadSeq) loading.hidden = true;
+    }
+    render();
+  }
+
+  function render() {
+    if (!font || (needsFallback(font, state.text) && !fallback)) {
+      if (loading.hidden) ensureFonts();
+      if (!font) return;
+    }
+    const result = build();
+    if (result) {
+      preview.innerHTML = result.svg;
+      lastSize = { width: result.width, height: result.height };
+    }
+    syncControls();
+  }
+
+  /** 設定欄の表示を、今の状態に合わせる */
+  function syncControls() {
+    const s = state.style;
+    const set = (id: string, v: string | number) => ($<HTMLInputElement>(id).value = String(v));
+    set('color', s.color);
+    set('tracking', s.tracking);
+    set('lineHeight', s.lineHeight);
+    set('outline1Color', state.outline.color);
+    set('outline1Width', state.outline.width);
+    set('outline2Color', state.outline2.color);
+    set('outline2Width', state.outline2.width);
+    set('shadowColor', state.shadow.color);
+    set('shadowOffset', state.shadow.offset);
+    set('shadowBlur', state.shadow.blur);
+    set('bgColor', state.bgColor);
+    fontSelect.value = s.font;
+    $<HTMLInputElement>('gloss').checked = s.gloss;
+    document.querySelectorAll<HTMLInputElement>('input[name="bg"]').forEach((el) => (el.checked = el.value === state.bgMode));
+    $('outline1Row').hidden = state.outlineMode === 'none';
+    $('outline2Row').hidden = state.outlineMode !== 'double';
+    $('shadowRow').hidden = state.shadowMode === 'none';
+    $('blurRow').hidden = state.shadowMode !== 'soft';
+    $('sizeOut').textContent = `${state.size}px`;
+    $('sizeLabel').textContent = `画像の大きさ：${lastSize.width}×${lastSize.height}px（等倍のとき）`;
+    const pressed = (sel: string, key: string, value: string) =>
+      document.querySelectorAll<HTMLButtonElement>(sel).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[key] === value)));
+    pressed('[data-preset]', 'preset', state.preset);
+    pressed('[data-align]', 'align', state.align);
+    pressed('[data-outline]', 'outline', state.outlineMode);
+    pressed('[data-shadow]', 'shadow', state.shadowMode);
+    // PNG のサイズの選択肢に、実際のピクセル数を出す
+    document.querySelectorAll<HTMLOptionElement>('#scale option').forEach((op) => {
+      const k = Number(op.value);
+      op.textContent = `${op.value === '1' ? '等倍' : `${k}倍`}（${lastSize.width * k}×${lastSize.height * k}px）`;
+    });
+  }
+
+  // ---------- 操作 ----------
+
+  /** 見た目を手で変えたら、プリセットの選択表示を外す */
+  function touched() {
+    state.preset = '';
+    render();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const p = TEXT_LOGO_PRESETS.find((x) => x.key === b.dataset.preset)!;
+      state.preset = p.key;
+      state.style = structuredClone(p);
+      if (p.outline) state.outline = { ...p.outline };
+      if (p.outline2) state.outline2 = { ...p.outline2 };
+      if (p.shadow) state.shadow = { ...p.shadow };
+      state.outlineMode = p.outline2 ? 'double' : p.outline ? 'single' : 'none';
+      state.shadowMode = p.shadow?.type ?? 'none';
+      state.bgMode = p.background ? 'color' : 'none';
+      if (p.background) state.bgColor = p.background;
+      ensureFonts();
+    }),
+  );
+
+  textInput.addEventListener('input', () => {
+    state.text = textInput.value;
+    render();
+  });
+
+  fontSelect.addEventListener('change', () => {
+    state.style.font = fontSelect.value;
+    state.preset = '';
+    ensureFonts();
+  });
+
+  /** スライダーや色の入力を、state の値につなぐ */
+  function bind(id: string, apply: (v: string) => void, keepPreset = false) {
+    $<HTMLInputElement>(id).addEventListener('input', (e) => {
+      apply((e.target as HTMLInputElement).value);
+      if (keepPreset) render();
+      else touched();
+    });
+  }
+  bind('color', (v) => (state.style.color = v));
+  bind('size', (v) => (state.size = Number(v)), true);
+  bind('tracking', (v) => (state.style.tracking = Number(v)));
+  bind('lineHeight', (v) => (state.style.lineHeight = Number(v)));
+  bind('outline1Color', (v) => (state.outline.color = v));
+  bind('outline1Width', (v) => (state.outline.width = Number(v)));
+  bind('outline2Color', (v) => (state.outline2.color = v));
+  bind('outline2Width', (v) => (state.outline2.width = Number(v)));
+  bind('shadowColor', (v) => (state.shadow.color = v));
+  bind('shadowOffset', (v) => (state.shadow.offset = Number(v)));
+  bind('shadowBlur', (v) => (state.shadow.blur = Number(v)));
+  bind('bgColor', (v) => {
+    state.bgColor = v;
+    state.bgMode = 'color'; // 色を選んだら、背景を「色」にする
+  });
+  bind('padding', (v) => (state.padding = Number(v)), true);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-align]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.align = b.dataset.align as typeof state.align;
+      render();
+    }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('[data-outline]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.outlineMode = b.dataset.outline as typeof state.outlineMode;
+      touched();
+    }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('[data-shadow]').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.shadowMode = b.dataset.shadow as typeof state.shadowMode;
+      touched();
+    }),
+  );
+  $<HTMLInputElement>('gloss').addEventListener('change', (e) => {
+    state.style.gloss = (e.target as HTMLInputElement).checked;
+    touched();
+  });
+  document.querySelectorAll<HTMLInputElement>('input[name="bg"]').forEach((el) =>
+    el.addEventListener('change', () => {
+      state.bgMode = el.value as 'none' | 'color';
+      touched();
+    }),
+  );
+
+  // ---------- 保存 ----------
+
+  function download(blob: Blob, filename: string) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('saveSvg').addEventListener('click', () => {
+    const r = build();
+    if (r) download(new Blob([r.svg], { type: 'image/svg+xml' }), 'text-logo.svg');
+  });
+
+  // PNG：SVG を画像として読み込み、倍率をかけた大きさの canvas に描いてから PNG に変換する
+  $('savePng').addEventListener('click', async () => {
+    const r = build();
+    if (!r) return;
+    const k = Number($<HTMLSelectElement>('scale').value);
+    const url = URL.createObjectURL(new Blob([r.svg], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = r.width * k;
+    canvas.height = r.height * k;
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob((blob) => blob && download(blob, `text-logo-${canvas.width}x${canvas.height}.png`), 'image/png');
+  });
+
+  render();
+</script>

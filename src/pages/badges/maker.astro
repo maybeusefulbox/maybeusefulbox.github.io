@@ -5,8 +5,8 @@
 //   文字入り … 円に沿った文字と中央の文字が入るバッジ。renderTextBadgeSvg() で描く
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GlossyPill from '../../components/GlossyPill.astro';
-import { motifs } from '../../data/badges';
-import { BADGE_FONTS } from '../../lib/badge-fonts';
+import type { Motif } from '../../lib/badge-svg';
+import { FONTS } from '../../lib/fonts';
 import { TEXT_BADGE_PRESETS } from '../../data/text-badge-presets';
 import { NEON_COLORS } from '../../lib/text-badge-svg';
 
@@ -19,6 +19,12 @@ const swatches = [
   '#6b7a99', '#333a4d', '#e6b422', '#aeb6c2', '#c8814a',
 ];
 const first = TEXT_BADGE_PRESETS[0];
+
+// シンプルのときに選べるモチーフ（「なし」は下の HTML に直接書いている）
+const motifs: { key: Motif; name: string }[] = [
+  { key: 'star', name: '星' },
+  { key: 'heart', name: 'ハート' },
+];
 ---
 
 <BaseLayout title="グロッシーバッジメーカー" description="円に沿った文字入りの缶バッジ・メダル風バッジを作って、SVG・PNGで保存できる無料ツールです。">
@@ -116,12 +122,12 @@ const first = TEXT_BADGE_PRESETS[0];
           <span class="label">フォント</span>
           <select id="font">
             <optgroup label="日本語も使えるフォント">
-              {BADGE_FONTS.filter((f) => f.lang === 'ja').map((f) => (
+              {FONTS.filter((f) => f.lang === 'ja').map((f) => (
                 <option value={f.key} selected={f.key === first.font}>{f.name}</option>
               ))}
             </optgroup>
             <optgroup label="英字フォント（日本語は丸ゴシックで表示）">
-              {BADGE_FONTS.filter((f) => f.lang === 'en').map((f) => (
+              {FONTS.filter((f) => f.lang === 'en').map((f) => (
                 <option value={f.key} selected={f.key === first.font}>{f.name}</option>
               ))}
             </optgroup>
@@ -329,7 +335,7 @@ const first = TEXT_BADGE_PRESETS[0];
   // ブラウザ側でも、配布素材と同じ関数で SVG を組み立てる
   import { renderBadgeSvg, type Motif, type Highlight } from '../../lib/badge-svg';
   import { renderTextBadgeSvg, needsFallback, type TextColorMode } from '../../lib/text-badge-svg';
-  import { loadFont, FALLBACK_FONT_KEY } from '../../lib/badge-fonts';
+  import { loadFont, FALLBACK_FONT_KEY } from '../../lib/fonts';
   import { TEXT_BADGE_PRESETS } from '../../data/text-badge-presets';
   import type { Font } from 'opentype.js';
 
