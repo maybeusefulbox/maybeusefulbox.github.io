@@ -16,9 +16,18 @@ const DEFAULT_TEXT = 'たぶん便利BOX';
   <div class="logo-tool">
     <h1>テキストSVGロゴメーカー</h1>
     <p class="lead">
-      好きな文字とフォントを選ぶと、ブログのタイトルや、同人誌・SNS画像の見出しに使えるロゴを作れます。<br />
+      好きな文字とフォントを選ぶと、WEBサイトや、同人誌・SNS画像に使えるロゴを作れます。<br />
       入力した文字はお使いのブラウザの中だけで処理され、どこにも送信されません。
     </p>
+
+    <!-- SVG形式の説明 -->
+    <section class="about-svg">
+      <h2>SVG形式とは（.svg）</h2>
+      <p>
+        SVG（Scalable Vector Graphics）とは、点や線、数式などのデータに基づいて画像を描画するベクター画像形式です。<br />
+        拡大・縮小しても劣化しない、データが軽い、SEOに強いなどのメリットがあります。
+      </p>
+    </section>
 
     <!-- href="#terms" で、同じページの id="terms" の場所へ移動する（ページ内リンク） -->
     <p class="terms-link"><a href="#terms">利用規約はこちら</a></p>
@@ -150,7 +159,7 @@ const DEFAULT_TEXT = 'たぶん便利BOX';
       </section>
     </div>
 
-    <details class="fold terms-section" id="terms">
+    <details class="fold terms-section" id="terms" open>
       <summary><h2 class="mark">利用規約</h2></summary>
       <TermsBody level={3} showLogo />
     </details>
@@ -168,6 +177,16 @@ const DEFAULT_TEXT = 'たぶん便利BOX';
     --line: #ecdccd;
   }
   .lead { font-size: 0.95rem; line-height: 1.8; }
+  /* SVG形式の説明：本文と区別できるよう、薄い色の箱に入れる */
+  .about-svg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #faf5f0;
+    border-left: 4px solid var(--accent);
+  }
+  .about-svg h2 { margin: 0 0 4px; font-size: 1rem; }
+  .about-svg p { margin: 0; font-size: 0.85rem; line-height: 1.8; }
   .terms-link { margin: 8px 0 0; font-size: 0.9rem; }
 
   /* 開閉できる見出し（アコーディオン）。閉じているときは ▶、開いているときは ▼ に見える */
