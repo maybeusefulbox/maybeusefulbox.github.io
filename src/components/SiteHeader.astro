@@ -117,10 +117,15 @@ const Title = here === withSlash(base) ? 'h1' : 'p';
   .menu a:hover { background: var(--ph-bg); }
   .menu a[aria-current='page'] { font-weight: 700; color: var(--accent); }
 
-  /* PC：ロゴとハンバーガーを隠し、サイト名を中央に大きく */
+  /* PC：ハンバーガーを隠し、ロゴとサイト名を中央に大きく（並び方はスマホと同じ） */
   @media (min-width: 768px) {
     .site-header { justify-content: center; padding: 32px 16px 24px; }
-    .logo, .menu-btn, .menu { display: none; }
+    .menu-btn, .menu { display: none; }
+    .brand { gap: 16px; }
+    /* サイト名が大きくなる分、ロゴもスマホ（52px）より大きくする */
+    .logo { width: 76px; height: 76px; }
+    /* ロゴが大きくなると線も太く見えるので、スマホより少し細くする */
+    .brand :global(.logo path) { stroke-width: 10px !important; }
     .site-title { font-size: 2.6rem; }
   }
 </style>
