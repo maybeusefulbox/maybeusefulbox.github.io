@@ -29,7 +29,7 @@ const SITE_NAME = 'たぶん便利BOX';
 
 // 作る画像の一覧。lines は大きく出すページ名（1要素＝1行）
 const PAGES = [
-  { key: 'puffy', image: 'src/assets/menu01.jpg', lines: ['ボンドロ風', '画像メーカー'], sub: '画像をぷっくりツヤツヤに' },
+  { key: 'puffy', image: 'src/assets/menu01.jpg', lines: ['ぷっくりシール風', '画像メーカー'], sub: '画像をぷっくりツヤツヤに' },
   { key: 'badges', image: 'src/assets/menu02.jpg', lines: ['メダル風', 'アイコンメーカー'], sub: '缶バッジ風のアイコンを作れる' },
   { key: 'logo', image: 'src/assets/menu03.jpg', lines: ['テキストSVG', 'ロゴメーカー'], sub: '好きなフォントでロゴ画像に' },
   { key: 'line', image: 'src/assets/menu04.jpg', lines: ['LINEスタンプ'], sub: 'オリジナルスタンプ配信中' },

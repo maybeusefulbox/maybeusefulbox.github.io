@@ -12,7 +12,7 @@ export const SITE_DESCRIPTION =
 /** メニュー（ハンバーガーメニューとフッター）。path は BASE_URL からの相対パス */
 export const nav = [
   { path: '', label: 'トップ' },
-  { path: 'puffy/', label: 'ボンドロ風画像メーカー' },
+  { path: 'puffy/', label: 'ぷっくりシール風画像メーカー' },
   { path: 'badges/maker/', label: 'メダル風アイコンメーカー' },
   { path: 'logo/', label: 'テキストSVGロゴメーカー' },
   { path: 'line/', label: 'LINEスタンプ' },
@@ -59,7 +59,7 @@ export const ANALYTICS = {
  * desc は、名前の下に出す短い説明。
  */
 export const contents: { label: string; href: string | null; icon?: ImageMetadata; desc?: string }[] = [
-  { label: 'ボンドロ風\u200B画像メーカー', href: 'puffy/', icon: menu01, desc: '画像をぷっくりツヤツヤに加工できます。' },
+  { label: 'ぷっくりシール風\u200B画像メーカー', href: 'puffy/', icon: menu01, desc: '画像をぷっくりツヤツヤに加工できます。' },
   { label: 'メダル風\u200Bアイコンメーカー', href: 'badges/maker/', icon: menu02, desc: '缶バッジのような、ツヤツヤアイコンを作れます。' },
   { label: 'テキストSVG\u200Bロゴメーカー', href: 'logo/', icon: menu03, desc: 'お好きなフォントで簡単にロゴ画像を作れます。' },
   { label: 'LINEスタンプ', href: 'line/', icon: menu04, desc: '当サイトオリジナルLINEスタンプです。' },
@@ -67,12 +67,13 @@ export const contents: { label: string; href: string | null; icon?: ImageMetadat
 
 /** 更新履歴（新しいものを上に足していく）。今はトップに表示していない */
 export const updates = [
+  { date: '2026-11-12', text: '画像メーカーの名前を「ぷっくりシール風画像メーカー」に変えました' },
   { date: '2026-11-11', text: 'テキストSVGロゴメーカーを公開しました' },
   { date: '2026-11-11', text: 'グロッシーバッジ素材の配布を終了しました（メダル風アイコンメーカーで作れます）' },
   { date: '2026-10-30', text: 'サイト名を「たぶん便利BOX」にして、デザインを新しくしました' },
   { date: '2026-10-29', text: 'サイトのURLを https://maybeusefulbox.github.io/ に移転しました' },
   { date: '2026-10-06', text: 'バッジの色変更ツールを公開しました' },
   { date: '2026-10-06', text: 'グロッシーバッジ素材の配布を始めました' },
-  { date: '2026-10-05', text: 'ボンドロ風画像メーカーを公開しました' },
+  { date: '2026-10-05', text: 'ぷっくりシール風画像メーカーを公開しました' },
   { date: '2026-10-05', text: 'サイトを開設しました' },
 ];
